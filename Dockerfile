@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.11
+FROM python:3.10-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -16,5 +16,5 @@ EXPOSE 8501
 # Define environment variable
 ENV NAME=World
 
-# Run app.py when the container launches
+# Command to run the app
 CMD ["streamlit", "run", "app.py"]
