@@ -1,16 +1,17 @@
+version: '3.8'
+
 services:
   web:
     build: .
     ports:
       - "8501:8501"
-    volumes:
-      - .:/app
     environment:
       - MONGO_USERNAME=${MONGO_USERNAME}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
       - MONGO_DBNAME=${MONGO_DBNAME}
+      - MONGO_URI=${MONGO_URI}
     depends_on:
       - mongo
 
@@ -18,18 +19,15 @@ services:
     image: mongo:latest
     volumes:
       - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: agamb031
-      MONGO_INITDB_ROOT_PASSWORD: 7GSZuKXA8M0QNJM7
-      MONGO_INITDB_DATABASE: dockership
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     command:
-      - "--wiredTigerCacheSizeGB=2" # Adjust based on available system memory
+      - "--wiredTigerCacheSizeGB=2"
       - "--bind_ip_all"
-      - "--tlsMode=disabled" # Disable TLS if not using it, or configure it properly
-      - "--setParameter"
-      - "internalQueryCacheMaxEntriesPerCollection=100"
 
 volumes:
   mongodb_data:

@@ -1,13 +1,24 @@
+import os
+from pymongo import MongoClient
+from dotenv import load_dotenv
 import streamlit as st
 import numpy as np
 import pandas as pd
-# Ensure db_config.py is correctly set up as previously discussed
-from modules.db_config import get_db
 
-# Initialize MongoDB connection
-db = get_db()
-moves_collection = db.moves  # Collection for moves
-log_collection = db.logs  # Collection for logs
+# Load environment variables
+load_dotenv()
+
+# MongoDB connection
+mongo_uri = os.getenv("MONGO_URI")
+database_name = os.getenv("MONGO_DBNAME", "dockership")
+
+client = MongoClient(mongo_uri)
+db = client[database_name]
+
+# Define collections
+moves_collection = db.moves
+log_collection = db.logs
+
 
 # Title with custom styling
 st.markdown("<h2 style='color: navy;'>Dockership - Container Management</h2>",
