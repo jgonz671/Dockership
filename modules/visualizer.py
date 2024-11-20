@@ -79,7 +79,7 @@ def display_grid(grid, title="Grid Layout"):
                 text = "NAN"
             elif value == "UNUSED":  # UNUSED cells
                 color = "white"
-                text = "UNUSED"
+                text = ""
             else:  # Valid container values
                 color = "lightblue"
                 text = str(value)
