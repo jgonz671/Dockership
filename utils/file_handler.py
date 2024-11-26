@@ -1,5 +1,6 @@
 import streamlit as st
-from modules.visualizer import parse_input, display_grid
+from utils.visualizer import parse_input, display_grid
+
 
 def file_handler():
     st.title("File Handler")
@@ -12,7 +13,7 @@ def file_handler():
         file_content = uploaded_file.read().decode("utf-8")
         st.write("File content:")
         st.text(file_content)
-        
+
         # Store file content in session state
         st.session_state.file_content = file_content
 

@@ -16,6 +16,7 @@ db = client[database_name]
 
 log_collection = db.logs
 
+
 def login():
     st.title("Dockership Login")
     st.write("Please enter your name to log in:")

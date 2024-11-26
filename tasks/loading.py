@@ -4,9 +4,9 @@ import pandas as pd
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-from modules import file_handler
-from modules.visualizer import parse_input, display_grid
 
+from utils import file_handler
+from utils.visualizer import parse_input, display_grid
 
 
 # Load environment variables
