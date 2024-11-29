@@ -23,12 +23,17 @@ load_dotenv()
 db_config = DBConfig()
 db = db_config.connect()
 
+# Check database connection
+if db_config.check_connection():
+    st.sidebar.success("✅ Connected to MongoDB successfully.")
+else:
+    st.sidebar.error("❌ Failed to connect to MongoDB. Check your configuration.")
+    st.stop()  # Stop the application if the database connection fails.
+
 # Initialize session state manager
 state_manager = StateManager(st.session_state)
 
 # Page router function
-
-
 def render_page(page_name):
     """
     Renders the appropriate page based on the page_name.
@@ -42,7 +47,6 @@ def render_page(page_name):
     }
     # Pass database instance where needed
     page_mapping.get(page_name, login)(db)
-
 
 # Main application loop
 if __name__ == "__main__":
