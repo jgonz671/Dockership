@@ -51,26 +51,42 @@ Make sure the following software is installed on your machine:
 
 ## Project Structure
 
-```plaintext
-Dockership/
+The following is the directory structure of the **Dockership** project:
+
+```
+DOCKERSHIP/
 │
-├── app.py                # Main Streamlit application script
-├── Dockerfile            # Dockerfile for building the Docker image
-├── requirements.txt      # Python package dependencies
-├── docker-compose.yml    # Docker compose configuration
+├── app.py                     # Main application script
+├── Dockerfile                 # Dockerfile for building the Docker image
+├── requirements.txt           # Python package dependencies
+├── docker-compose.yml         # Docker Compose configuration
+├── .env                       # Environment variables (actual file)
+├── .env.example               # Example environment variable file
+├── .gitignore                 # Git ignore file
+├── README.md                  # Project documentation
 │
-├── data/                 # Directory for any data files, e.g., ship layouts
-│   └── ship_layout.csv   # Example layout data (Sample)
+├── data/                      # Directory for data files
+│   └── ship_layout.csv        # Ship layout data (Sample)
 │
-├── logs/                 # Directory for log files
-│   └── events.log        # Log file for application events (Sample)
+├── auth/                      # Authentication-related scripts
+│   └── login.py               # Login functionality module
 │
-├── modules/              # Python modules for additional functionality
-│   ├── login.py          # Module for login functionality (Sample)
-│   ├── file_handler.py   # Module for file upload and download handling (Sample)
-│   └── visualizer.py     # Module for generating 2D graphics of the ship (Sample)
+├── config/                    # Configuration-related scripts
+│   └── db_config.py           # Database configuration script
 │
-└── README.md             # Instructions and information about the application
+├── tasks/                     # Task-related modules
+│   ├── balancing.py           # Ship balancing logic
+│   ├── loading.py             # Loading operation module
+│   └── operation.py           # Other operations logic
+│
+├── tests/                     # Unit tests
+│   ├── test_file_handler.py   # Test script for file handling
+│   └── test_visualizer.py     # Test script for visualizer functionality
+│
+└── utils/                     # Utility modules
+    ├── file_handler.py        # File handling utilities
+    ├── state_manager.py       # State management utilities
+    └── visualizer.py          # Visualization utilities
 ```
 
 ## Development Workflow
