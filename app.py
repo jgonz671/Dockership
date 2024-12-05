@@ -1,9 +1,3 @@
-# app.py
-"""
-Main Streamlit application for the Dockership project.
-Handles user interactions, navigation between pages, and session management.
-"""
-
 import os
 from dotenv import load_dotenv
 import streamlit as st
@@ -14,6 +8,7 @@ st.set_page_config(page_title="Dockership Application", layout="wide")
 from config.db_config import DBConfig
 from utils.state_manager import StateManager
 from auth.login import login
+from auth.register import register
 from utils.file_handler import file_handler
 from tasks.operation import operation
 from tasks.loading import loading_task
@@ -43,13 +38,14 @@ def render_page(page_name):
     """
     page_mapping = {
         "login": login,
+        "register": register,
         "file_handler": file_handler,
         "operation": operation,
         "loading": loading_task,
         "balancing": balancing_task,
     }
     
-    # Call the page without db argument
+    # Call the page based on the current session state
     page_mapping.get(page_name, login)()
 
 # Main application loop
