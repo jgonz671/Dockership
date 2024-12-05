@@ -2,7 +2,6 @@ import os
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
-
 class DBConfig:
     """
     MongoDB configuration class.
@@ -17,11 +16,12 @@ class DBConfig:
         Establishes a connection to the MongoDB instance and ensures the database exists.
         """
         try:
-            # Use the dynamically built MONGO_URI from environment variables
-            mongo_uri = os.getenv(
-                "MONGO_URI",
-                "mongodb://mongo:27017/dockership"
-            )
+            # Fetch the MongoDB URI from environment variables
+            mongo_uri = os.getenv("MONGO_URI")
+            if not mongo_uri:
+                raise ValueError("MONGO_URI is not set in the environment variables.")
+
+            # Connect to MongoDB using the Atlas URI
             self.client = MongoClient(mongo_uri)
             self.db = self.client[os.getenv("MONGO_DBNAME", "dockership")]
 
@@ -31,6 +31,8 @@ class DBConfig:
             return self.db
         except ConnectionFailure as e:
             raise RuntimeError(f"Database connection failed: {e}")
+        except ValueError as e:
+            raise RuntimeError(f"Environment error: {e}")
 
     def _initialize_collections(self):
         """
