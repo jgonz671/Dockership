@@ -1,3 +1,5 @@
+# auth/login.py
+
 import streamlit as st
 import pandas as pd
 from pymongo import MongoClient
@@ -16,11 +18,11 @@ db = client[database_name]
 
 log_collection = db.logs
 
-
 def login():
     st.title("Dockership Login")
     st.write("Please enter your name to log in:")
     user_name = st.text_input("Name:")
+    
     if st.button("Submit"):
         if user_name.strip():
             st.session_state.user_name = user_name

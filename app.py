@@ -48,8 +48,9 @@ def render_page(page_name):
         "loading": loading_task,
         "balancing": balancing_task,
     }
-    # Pass database instance where needed
-    page_mapping.get(page_name, login)(db)
+    
+    # Call the page without db argument
+    page_mapping.get(page_name, login)()
 
 # Main application loop
 if __name__ == "__main__":
