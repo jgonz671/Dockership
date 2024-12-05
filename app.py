@@ -8,6 +8,9 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 
+# Initialize Streamlit's page config at the very beginning
+st.set_page_config(page_title="Dockership Application", layout="wide")
+
 from config.db_config import DBConfig
 from utils.state_manager import StateManager
 from auth.login import login
@@ -50,5 +53,4 @@ def render_page(page_name):
 
 # Main application loop
 if __name__ == "__main__":
-    st.set_page_config(page_title="Dockership Application", layout="wide")
     render_page(state_manager.get_page())
