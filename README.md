@@ -70,7 +70,7 @@ DOCKERSHIP/
 │
 ├── auth/                      # Authentication-related scripts
 │   ├── login.py               # Login functionality module
-│   └── register.py 
+│   └── register.py            # Registration functionality module
 │
 ├── config/                    # Configuration-related scripts
 │   └── db_config.py           # Database configuration script
@@ -84,12 +84,23 @@ DOCKERSHIP/
 │   ├── test_file_handler.py   # Test script for file handling
 │   └── test_visualizer.py     # Test script for visualizer functionality
 │
-└── utils/                     # Utility modules
-    ├── file_handler.py        # File handling utilities
-    ├── state_manager.py       # State management utilities
-    ├── navigation.py
-    ├── validators.py
-    └── visualizer.py          # Visualization utilities
+└── pages/                     # Page-related modules organized by functionality
+    ├── auth/                  # Authentication pages (login, register)
+    │   ├── login.py           # Login page functionality
+    │   └── register.py        # Register page functionality
+    │
+    ├── file_handler/          # File handler page
+    │   └── file_handler.py    # File handler page functionality
+    │
+    ├── tasks/                  # Task pages (operation, loading, balancing)
+    │   ├── operation.py       # Operations task page
+    │   ├── loading.py         # Loading task page
+    │   └── balancing.py       # Balancing task page
+    │
+    └── components/             # Common components for the pages
+        ├── buttons.py         # Common button components for pages
+        ├── grid.py            # Grid-related components
+        └── textboxes.py       # Textbox components
 ```
 
 ## Development Workflow
