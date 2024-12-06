@@ -69,7 +69,8 @@ DOCKERSHIP/
 │   └── ship_layout.csv        # Ship layout data (Sample)
 │
 ├── auth/                      # Authentication-related scripts
-│   └── login.py               # Login functionality module
+│   ├── login.py               # Login functionality module
+│   └── register.py 
 │
 ├── config/                    # Configuration-related scripts
 │   └── db_config.py           # Database configuration script
@@ -86,6 +87,8 @@ DOCKERSHIP/
 └── utils/                     # Utility modules
     ├── file_handler.py        # File handling utilities
     ├── state_manager.py       # State management utilities
+    ├── navigation.py
+    ├── validators.py
     └── visualizer.py          # Visualization utilities
 ```
 

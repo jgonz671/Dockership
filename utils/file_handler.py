@@ -23,6 +23,5 @@ def file_handler():
             return True
 
     return False
-# work on making the webpage reload immedaitely when i make changes to the code.
+
 # Make a logout button for all pages other than the login page and the register page.
-# Adjust the register and login buttons on login and register pages.

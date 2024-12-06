@@ -3,8 +3,8 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
-
-from utils.validators import validate_username, validate_name  # Importing validators
+from utils.validators import validate_username, validate_name
+from utils.navigation import navigate_to  
 
 # Load environment variables
 load_dotenv()
@@ -23,30 +23,29 @@ def register():
     """
     st.title("User Registration")
 
-    # Form for user registration
     first_name = st.text_input("First Name (required):")
     last_name = st.text_input("Last Name (optional):")
     username = st.text_input("Username (required):")
 
-    if st.button("Register"):
-        if validate_name(first_name, "first_name") and validate_name(last_name, "last_name") and validate_username(username):
-            if users_collection.find_one({"username": username}):
-                st.error("Username already exists. Please choose another.")
+    col1, col2 = st.columns([1, 6])
+    with col1:
+        if st.button("Register"):
+            if validate_name(first_name, "first_name") and validate_name(last_name, "last_name") and validate_username(username):
+                if users_collection.find_one({"username": username}):
+                    st.error("Username already exists. Please choose another.")
+                else:
+                    first_name = first_name.capitalize()
+                    last_name = last_name.capitalize() if last_name else ''
+                    users_collection.insert_one({
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'username': username
+                    })
+                    st.success("Registration successful. Please login.")
+                    navigate_to("login") 
             else:
-                # Format names correctly
-                first_name = first_name.capitalize()
-                last_name = last_name.capitalize() if last_name else ''
-                # Insert new user into the database
-                users_collection.insert_one({
-                    'first_name': first_name,
-                    'last_name': last_name,
-                    'username': username
-                })
-                st.success("Registration successful. Please login.")
-                st.session_state.page = "login"  # Redirect to login page
-        else:
-            st.error("Please ensure all fields are valid.")
-    
-    # Go to login page
-    if st.button("Go to Login Page"):
-        st.session_state.page = "login"  # Set page to login
+                st.error("Please ensure all fields are valid.")
+
+    with col2:
+        if st.button("Already have an account? Login here"):
+            navigate_to("login")  

@@ -6,8 +6,10 @@ services:
     environment:
       - MONGO_USERNAME=${MONGO_USERNAME}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
-      - MONGO_URI=${MONGO_URI}  # Connect directly to MongoDB Atlas
+      - MONGO_URI=${MONGO_URI}
       - MONGO_DBNAME=${MONGO_DBNAME}
+    volumes:
+      - .:/app  # Mount your project directory
     networks:
       - dockership_network
 
