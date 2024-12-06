@@ -4,7 +4,7 @@ from utils.visualizer import parse_input, display_grid
 
 def file_handler():
     st.title("File Handler")
-    st.write(f"Hello, {st.session_state.user_name}!")
+    st.write(f"Hello, {st.session_state.first_name}!")
     st.write("Upload a .txt file to proceed:")
 
     uploaded_file = st.file_uploader("Choose a .txt file", type=["txt"])
@@ -23,3 +23,6 @@ def file_handler():
             return True
 
     return False
+# work on making the webpage reload immedaitely when i make changes to the code.
+# Make a logout button for all pages other than the login page and the register page.
+# Adjust the register and login buttons on login and register pages.
