@@ -46,3 +46,7 @@ def register():
                 st.session_state.page = "login"  # Redirect to login page
         else:
             st.error("Please ensure all fields are valid.")
+    
+    # Go to login page
+    if st.button("Go to Login Page"):
+        st.session_state.page = "login"  # Set page to login

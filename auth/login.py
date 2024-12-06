@@ -48,3 +48,7 @@ def login():
                 st.error("Username not found. Please register.")
         else:
             st.error("Invalid username format. Please enter a valid username.")
+    
+    # Go to register page
+    if st.button("Go to Register Page"):
+        st.session_state.page = "register"  # Set page to register
