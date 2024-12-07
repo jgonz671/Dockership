@@ -19,7 +19,10 @@ def login():
         if create_button("Login"):
             is_valid, error_message = validate_username(username)
             if not is_valid:
-                st.error(error_message)
+                try:
+                    st.toast(error_message, icon="❌")
+                except AttributeError:
+                    st.error(error_message)
                 return
 
             user = check_user_exists(username)
@@ -27,10 +30,16 @@ def login():
                 st.session_state.user_name = user['username']
                 st.session_state.first_name = user['first_name']
                 log_user_action(username, "Login")  # Log user entry in MongoDB
-                st.success(f"Welcome, {user['first_name']}!")
+                try:
+                    st.toast(f"Welcome, {user['first_name']}!", icon="✅")
+                except AttributeError:
+                    st.success(f"Welcome, {user['first_name']}!")
                 create_navigation_button(None, "file_handler", st.session_state, trigger_redirect=True)
             else:
-                st.error("Username not found. Please register.")
+                try:
+                    st.toast("Username not found. Please register.", icon="❌")
+                except AttributeError:
+                    st.error("Username not found. Please register.")
 
     with col2:
         create_navigation_button("Need an account? Register here", "register", st.session_state)
