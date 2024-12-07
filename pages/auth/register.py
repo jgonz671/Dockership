@@ -69,5 +69,4 @@ def register():
     with col2:
         create_navigation_button(
             "Already have an account? Login here", "login", st.session_state)
-        # Navigation button for login
-        create_navigation_button("Already have an account? Login here", "login", st.session_state)
+
