@@ -25,21 +25,36 @@ def register():
 
             # Display errors if any validation fails
             if not is_first_name_valid:
-                st.error(first_name_error)
+                try:
+                    st.toast(first_name_error, icon="❌")
+                except AttributeError:
+                    st.error(first_name_error)
                 return
             if not is_last_name_valid:
-                st.error(last_name_error)
+                try:
+                    st.toast(last_name_error, icon="❌")
+                except AttributeError:
+                    st.error(last_name_error)
                 return
             if not is_username_valid:
-                st.error(username_error)
+                try:
+                    st.toast(username_error, icon="❌")
+                except AttributeError:
+                    st.error(username_error)
                 return
 
             # Attempt to register the user
             if register_user(first_name, last_name, username):
-                st.success("Registration successful. Redirecting to login...")
+                try:
+                    st.toast("Registration successful! Redirecting to login...", icon="✅")
+                except AttributeError:
+                    st.success("Registration successful! Redirecting to login...")
                 create_navigation_button(None, "login", st.session_state, trigger_redirect=True)
             else:
-                st.error("Username already exists. Please choose another.")
+                try:
+                    st.toast("Username already exists. Please choose another.", icon="❌")
+                except AttributeError:
+                    st.error("Username already exists. Please choose another.")
 
     with col2:
         create_navigation_button("Already have an account? Login here", "login", st.session_state)

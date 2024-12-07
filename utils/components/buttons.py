@@ -53,4 +53,10 @@ def create_logout_button(session_state):
         session_state.clear()  # Clears all session state variables.
         session_state["page"] = "login"  # Redirect to the login page.
 
+        # Floating logout message (if Streamlit supports `st.toast`, otherwise fallback to success message)
+        try:
+            st.toast("Logout successful!", icon="✅")
+        except AttributeError:
+            st.success("Logout successful!")
+
     return create_button("Logout", on_click=logout)
