@@ -1,44 +1,38 @@
-# auth/login.py
-import os
-from dotenv import load_dotenv
-from pymongo import MongoClient
-import pandas as pd
+from config.db_config import DBConfig
+from utils.validators import validate_username, check_user_exists
+from utils.logging import log_user_action
 
-# Load environment variables
-load_dotenv()
+# Initialize DBConfig
+db_config = DBConfig()
+db = db_config.connect()
+users_collection = db_config.get_collection("users")
+logs_collection = db_config.get_collection("logs")
 
-# MongoDB connection
-mongo_uri = os.getenv("MONGO_URI")
-database_name = os.getenv("MONGO_DBNAME", "dockership")
 
-client = MongoClient(mongo_uri)
-db = client[database_name]
-users_collection = db.users
-log_collection = db.logs
-
-def check_user_exists(username: str):
+def validate_and_check_user(username: str):
     """
-    Check if a user with the given username exists in the database.
-    
+    Validate the username and check if the user exists in the database.
+
     Args:
-        username (str): The username to check.
-        
+        username (str): The username to validate and check.
+
     Returns:
-        dict or None: User document if found, None otherwise.
+        tuple: (bool, str, dict or None) - A tuple containing:
+               - Whether the validation and check were successful.
+               - An error message if unsuccessful.
+               - The user document if found, or None otherwise.
     """
-    return users_collection.find_one({"username": username})
+    # Validate the username
+    is_valid, error_message = validate_username(username)
+    if not is_valid:
+        return False, error_message, None
 
-def log_user_action(username: str, action: str):
-    """
-    Log a user's action to the log collection.
+    # Check if the user exists
+    user = check_user_exists(username)
+    if not user:
+        return False, "Username not found. Please register.", None
+
+    # Log the user action
+    log_user_action(logs_collection, username, "Login", "User logged in successfully.")
     
-    Args:
-        username (str): The username of the user.
-        action (str): The action performed by the user.
-    """
-    log_entry = {
-        'user': username,
-        'timestamp': pd.Timestamp.now(),
-        'action': action
-    }
-    log_collection.insert_one(log_entry)
+    return True, "", user

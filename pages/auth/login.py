@@ -1,9 +1,9 @@
-# Dockership/pages/auth/login.py
 import streamlit as st
+
 from utils.components.buttons import create_button, create_navigation_button
 from utils.components.textboxes import create_textbox
-from utils.validators import validate_username
-from auth.login import check_user_exists, log_user_action
+from auth.login import validate_and_check_user
+
 
 def login():
     """
@@ -17,24 +17,28 @@ def login():
     col1, col2 = st.columns([1, 1])
     with col1:
         if create_button("Login"):
-            # Validate username
-            is_valid, error_message = validate_username(username)
-            if not is_valid:
-                st.error(error_message)
+            # Call the backend function to validate and check the user
+            success, error_message, user = validate_and_check_user(username)
+
+            if not success:
+                try:
+                    st.toast(error_message, icon="❌")
+                except AttributeError:
+                    st.error(error_message)
                 return
 
-            # Check if user exists
-            user = check_user_exists(username)
-            if user:
-                st.session_state["user_name"] = user["username"]
-                st.session_state["first_name"] = user["first_name"]
-                st.session_state["page"] = "file_handler"  # Redirect to file handler
-                log_user_action(username, "Login successful")  # Log the action
-
-                st.rerun()
-            else:
-                st.error("Username not found. Please register.")
+            # Save user details to session state
+            st.session_state.user_name = user['username']
+            st.session_state.first_name = user['first_name']
+            try:
+                st.toast(f"Welcome, {user['first_name']}!", icon="✅")
+            except AttributeError:
+                st.success(f"Welcome, {user['first_name']}!")
+            create_navigation_button(
+                None, "file_handler", st.session_state, trigger_redirect=True
+            )
 
     with col2:
-        # Navigation button for registration
-        create_navigation_button("Need an account? Register here", "register", st.session_state)
+        create_navigation_button(
+            "Need an account? Register here", "register", st.session_state
+        )
