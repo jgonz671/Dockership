@@ -1,4 +1,4 @@
-# pages/components/textboxes.py
+# Dockership/utils/components/textboxes.py
 import streamlit as st
 
 def create_textbox(label, default_value="", key=None, **kwargs):

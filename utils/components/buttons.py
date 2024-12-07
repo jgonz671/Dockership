@@ -1,4 +1,4 @@
-# pages/components/buttons.py
+# Dockership/utils/components/buttons.py
 import streamlit as st
 
 def create_button(label, on_click=None, args=None, **kwargs):

@@ -1,4 +1,4 @@
-# pages/components/grid.py
+# Dockership/utils/components/grid.py
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
