@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 
-# Initialize Streamlit's page config at the very beginning
+# Set page config at the very beginning
 st.set_page_config(page_title="Dockership Application", layout="wide")
 
 # Import pages and components
@@ -11,9 +11,6 @@ from utils.state_manager import StateManager
 from pages.auth.login import login
 from pages.auth.register import register
 from pages.file_handler.file_handler import file_handler
-# from pages.tasks.operation import operation
-# from pages.tasks.loading import loading_task
-# from pages.tasks.balancing import balancing_task
 
 # Load environment variables
 load_dotenv()
@@ -27,7 +24,7 @@ if db_config.check_connection():
     st.sidebar.success("✅ Connected to MongoDB successfully.")
 else:
     st.sidebar.error("❌ Failed to connect to MongoDB. Check your configuration.")
-    st.stop()  # Stop the application if the database connection fails.
+    st.stop()
 
 # Initialize session state manager
 state_manager = StateManager(st.session_state)
@@ -41,13 +38,11 @@ def render_page(page_name):
         "login": login,
         "register": register,
         "file_handler": file_handler,
-        # "operation": operation,
-        # "loading": loading_task,
-        # "balancing": balancing_task,
     }
-    
-    # Call the page based on the current session state
+
+    # Render the appropriate page
     page_mapping.get(page_name, login)()
+
 
 # Main application loop
 if __name__ == "__main__":
