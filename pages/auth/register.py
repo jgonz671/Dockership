@@ -2,8 +2,8 @@
 import streamlit as st
 from utils.components.buttons import create_button, create_navigation_button
 from utils.components.textboxes import create_textbox
-from auth.register import register_user
 from utils.validators import validate_username, validate_name
+from auth.register import register_user
 
 def register():
     """
@@ -18,14 +18,28 @@ def register():
     col1, col2 = st.columns([1, 6])
     with col1:
         if create_button("Register"):
-            if validate_name(first_name, "first_name") and validate_name(last_name, "last_name") and validate_username(username):
-                if register_user(first_name, last_name, username):
-                    st.success("Registration successful. Please login.")
-                    create_navigation_button("Proceed to Login", "login", st.session_state)
-                else:
-                    st.error("Username already exists. Please choose another.")
+            # Validate inputs
+            is_first_name_valid, first_name_error = validate_name(first_name, "first_name")
+            is_last_name_valid, last_name_error = validate_name(last_name, "last_name")
+            is_username_valid, username_error = validate_username(username)
+
+            # Display errors if any validation fails
+            if not is_first_name_valid:
+                st.error(first_name_error)
+                return
+            if not is_last_name_valid:
+                st.error(last_name_error)
+                return
+            if not is_username_valid:
+                st.error(username_error)
+                return
+
+            # Attempt to register the user
+            if register_user(first_name, last_name, username):
+                st.success("Registration successful. Please login.")
+                create_navigation_button("Proceed to Login", "login", st.session_state)
             else:
-                st.error("Please ensure all fields are valid.")
+                st.error("Username already exists. Please choose another.")
 
     with col2:
         create_navigation_button("Already have an account? Login here", "login", st.session_state)
