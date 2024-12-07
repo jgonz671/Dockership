@@ -5,14 +5,15 @@ import streamlit as st
 # Initialize Streamlit's page config at the very beginning
 st.set_page_config(page_title="Dockership Application", layout="wide")
 
+# Import pages and components
 from config.db_config import DBConfig
 from utils.state_manager import StateManager
-from auth.login import login
-from auth.register import register
-from utils.file_handler import file_handler
-from tasks.operation import operation
-from tasks.loading import loading_task
-from tasks.balancing import balancing_task
+from pages.auth.login import login
+from pages.auth.register import register
+from pages.file_handler.file_handler import file_handler
+# from pages.tasks.operation import operation
+# from pages.tasks.loading import loading_task
+# from pages.tasks.balancing import balancing_task
 
 # Load environment variables
 load_dotenv()
@@ -40,9 +41,9 @@ def render_page(page_name):
         "login": login,
         "register": register,
         "file_handler": file_handler,
-        "operation": operation,
-        "loading": loading_task,
-        "balancing": balancing_task,
+        # "operation": operation,
+        # "loading": loading_task,
+        # "balancing": balancing_task,
     }
     
     # Call the page based on the current session state

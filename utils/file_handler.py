@@ -1,27 +1,21 @@
-import streamlit as st
-from utils.visualizer import parse_input, display_grid
+# Dockership/tasks/file_handler.py
 
+from utils.validators import validate_file_content
 
-def file_handler():
-    st.title("File Handler")
-    st.write(f"Hello, {st.session_state.first_name}!")
-    st.write("Upload a .txt file to proceed:")
+def process_file(file_content):
+    """
+    Processes the uploaded file content.
 
-    uploaded_file = st.file_uploader("Choose a .txt file", type=["txt"])
+    Args:
+        file_content (str): The content of the uploaded file.
 
-    if uploaded_file is not None:
-        file_content = uploaded_file.read().decode("utf-8")
-        st.write("File content:")
-        st.text(file_content)
-
-        # Store file content in session state
-        st.session_state.file_content = file_content
-
-        # Perform any processing you need with the file content
-        st.success("File processed successfully!")
-        if st.button("Proceed to Operations"):
-            return True
-
-    return False
-
-# Make a logout button for all pages other than the login page and the register page.
+    Returns:
+        dict: A dictionary containing processed data or metadata.
+    """
+    # Example of processing: Parse lines into a list
+    lines = file_content.splitlines()
+    processed_data = {
+        "line_count": len(lines),
+        "first_10_lines": lines[:10]
+    }
+    return processed_data
