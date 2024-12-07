@@ -17,7 +17,7 @@ def create_button(label, on_click=None, args=None, **kwargs):
     button = st.button(label, on_click=on_click, args=args, **kwargs)
     return button
 
-def create_navigation_button(label, page_name, session_state, **kwargs):
+def create_navigation_button(label, page_name, session_state, trigger_redirect=False, **kwargs):
     """
     Creates a navigation button that changes the page in the session state.
 
@@ -25,15 +25,19 @@ def create_navigation_button(label, page_name, session_state, **kwargs):
         label (str): The text to display on the button.
         page_name (str): The page name to navigate to.
         session_state (dict): The Streamlit session state.
+        trigger_redirect (bool): If True, navigates immediately without requiring a button click.
         **kwargs: Additional keyword arguments to customize the button appearance.
 
     Returns:
-        bool: Whether the button was clicked.
+        bool: Whether the button was clicked (only for non-trigger_redirect mode).
     """
     def navigate():
-        session_state["page"] = page_name  # Modify the session state to trigger rerun.
+        session_state["page"] = page_name
 
-    return create_button(label, on_click=navigate, **kwargs)
+    if trigger_redirect:
+        navigate()  # Immediately set the navigation page.
+    else:
+        return create_button(label, on_click=navigate, **kwargs)
 
 def create_logout_button(session_state):
     """

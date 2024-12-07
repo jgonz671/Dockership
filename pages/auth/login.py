@@ -1,4 +1,4 @@
-# pages/auth/login.py
+# Dockership/pages/auth/login.py
 import streamlit as st
 from utils.components.buttons import create_button, create_navigation_button
 from utils.components.textboxes import create_textbox
@@ -28,7 +28,7 @@ def login():
                 st.session_state.first_name = user['first_name']
                 log_user_action(username, "Login")  # Log user entry in MongoDB
                 st.success(f"Welcome, {user['first_name']}!")
-                create_navigation_button("Proceed to File Handler", "file_handler", st.session_state)
+                create_navigation_button(None, "file_handler", st.session_state, trigger_redirect=True)
             else:
                 st.error("Username not found. Please register.")
 

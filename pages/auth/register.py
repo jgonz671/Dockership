@@ -1,4 +1,4 @@
-# pages/auth/register.py
+# Dockership/pages/auth/register.py
 import streamlit as st
 from utils.components.buttons import create_button, create_navigation_button
 from utils.components.textboxes import create_textbox
@@ -36,8 +36,8 @@ def register():
 
             # Attempt to register the user
             if register_user(first_name, last_name, username):
-                st.success("Registration successful. Please login.")
-                create_navigation_button("Proceed to Login", "login", st.session_state)
+                st.success("Registration successful. Redirecting to login...")
+                create_navigation_button(None, "login", st.session_state, trigger_redirect=True)
             else:
                 st.error("Username already exists. Please choose another.")
 
