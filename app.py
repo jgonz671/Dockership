@@ -11,9 +11,9 @@ from utils.state_manager import StateManager
 from pages.auth.login import login
 from pages.auth.register import register
 from pages.file_handler.file_handler import file_handler
-from pages.tasks.operation import operation
-from pages.tasks.loading import loading_task
-from pages.tasks.balancing import balancing_task
+# from pages.tasks.operation import operation
+# from pages.tasks.loading import loading_task
+# from pages.tasks.balancing import balancing_task
 
 # Load environment variables
 load_dotenv()
@@ -41,9 +41,9 @@ def render_page(page_name):
         "login": login,
         "register": register,
         "file_handler": file_handler,
-        "operation": operation,
-        "loading": loading_task,
-        "balancing": balancing_task,
+        # "operation": operation,
+        # "loading": loading_task,
+        # "balancing": balancing_task,
     }
     
     # Call the page based on the current session state

@@ -53,3 +53,19 @@ def validate_required_field(field, field_name):
     if not field.strip():
         return False, f"{field_name} is required."
     return True, ""
+
+def validate_file_content(file_content):
+    """
+    Validates the content of the uploaded file.
+
+    Args:
+        file_content (str): The content of the uploaded file.
+
+    Returns:
+        tuple: (bool, str) - A tuple containing whether the content is valid and an error message if invalid.
+    """
+    if not file_content.strip():
+        return False, "The uploaded file is empty."
+    if len(file_content) > 10000:  # Arbitrary limit for demonstration
+        return False, "The uploaded file exceeds the allowed size."
+    return True, ""

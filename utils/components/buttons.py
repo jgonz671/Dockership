@@ -31,8 +31,22 @@ def create_navigation_button(label, page_name, session_state, **kwargs):
         bool: Whether the button was clicked.
     """
     def navigate():
-        session_state.page = page_name
-        st.experimental_rerun()
+        session_state["page"] = page_name  # Modify the session state to trigger rerun.
 
     return create_button(label, on_click=navigate, **kwargs)
 
+def create_logout_button(session_state):
+    """
+    Creates a logout button that clears the session state and redirects to the login page.
+
+    Args:
+        session_state (dict): The Streamlit session state.
+
+    Returns:
+        bool: Whether the logout button was clicked.
+    """
+    def logout():
+        session_state.clear()  # Clears all session state variables.
+        session_state["page"] = "login"  # Redirect to the login page.
+
+    return create_button("Logout", on_click=logout)
