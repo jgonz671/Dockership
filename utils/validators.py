@@ -1,5 +1,25 @@
 # utils/validators.py
 import re
+from config.db_config import DBConfig
+
+# Initialize DBConfig
+db_config = DBConfig()
+db = db_config.connect()
+users_collection = db_config.get_collection("users")
+
+
+def check_user_exists(username: str):
+    """
+    Check if a user with the given username exists in the database.
+
+    Args:
+        username (str): The username to check.
+
+    Returns:
+        dict or None: User document if found, None otherwise.
+    """
+    return users_collection.find_one({"username": username})
+
 
 def validate_username(username):
     """
