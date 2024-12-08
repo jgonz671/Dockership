@@ -21,6 +21,7 @@ def login():
             success, error_message, user = validate_and_check_user(username)
 
             if not success:
+                # Display error messages
                 try:
                     st.toast(error_message, icon="❌")
                 except AttributeError:
@@ -28,17 +29,21 @@ def login():
                 return
 
             # Save user details to session state
-            st.session_state.user_name = user['username']
-            st.session_state.first_name = user['first_name']
+            st.session_state["user_name"] = user["username"]
+            st.session_state["first_name"] = user["first_name"]
+            st.session_state["page"] = "file_handler"  # Redirect to file handler
+
+            # Display success message
             try:
                 st.toast(f"Welcome, {user['first_name']}!", icon="✅")
             except AttributeError:
                 st.success(f"Welcome, {user['first_name']}!")
-            create_navigation_button(
-                None, "file_handler", st.session_state, trigger_redirect=True
-            )
+
+            # Trigger rerun to load the next page
+            st.rerun()
 
     with col2:
+        # Navigation button for registration page
         create_navigation_button(
             "Need an account? Register here", "register", st.session_state
         )
