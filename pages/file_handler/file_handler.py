@@ -57,8 +57,8 @@ def file_handler():
         # Proceed to operations
         if create_button("Proceed to Operations"):
             log_proceed_to_operations(logs_collection, username)
-            create_navigation_button(
-                None, "operation", st.session_state, trigger_redirect=True)
+            st.session_state["page"] = "operation"  # Update page to "operation"
+            st.rerun()  # Trigger rerun to navigate to the new page
 
-    # Logout button
+    # Logout button 
     create_logout_button(st.session_state)
