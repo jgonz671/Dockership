@@ -22,8 +22,8 @@ def perform_operation(username: str, operation_type: str):
     log_user_action(
         logs_collection,
         username,
-        f"{operation_type.capitalize()} Operation",
         f"User initiated the {operation_type} operation.",
+        "",
     )
 
     # Return the page name for navigation
