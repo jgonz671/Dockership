@@ -19,9 +19,9 @@ def register():
     """
     st.title("User Registration")
 
-    first_name = create_textbox("First Name (required):")
-    last_name = create_textbox("Last Name (optional):")
-    username = create_textbox("Username (required):")
+    first_name = create_textbox("First Name:")
+    last_name = create_textbox("Last Name:")
+    username = create_textbox("Username:")
 
     col1, col2 = st.columns([1, 6])
     with col1:

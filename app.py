@@ -11,6 +11,7 @@ from utils.state_manager import StateManager
 from pages.auth.login import login
 from pages.auth.register import register
 from pages.file_handler.file_handler import file_handler
+from pages.tasks.operation import operation
 
 # Load environment variables
 load_dotenv()
@@ -38,6 +39,7 @@ def render_page(page_name):
         "login": login,
         "register": register,
         "file_handler": file_handler,
+        "operation": operation,
     }
 
     # Render the appropriate page
