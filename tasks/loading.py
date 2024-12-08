@@ -1,43 +1,98 @@
-import streamlit as st
-import numpy as np
-import pandas as pd
-from pymongo import MongoClient
-import os
-from dotenv import load_dotenv
+from utils.logging import log_user_action
+from config.db_config import DBConfig
+import copy
 
-from utils import file_handler
-from utils.visualizer import parse_input, display_grid
+# Initialize database connection
+db_config = DBConfig()
+db = db_config.connect()
+logs_collection = db_config.get_collection("logs")
 
 
-# Load environment variables
-load_dotenv()
+def optimize_load_unload(manifest, unload_list, load_list):
+    """
+    Optimizes the loading/unloading sequence to minimize time and crane idle.
 
-# MongoDB connection
-mongo_uri = os.getenv("MONGO_URI")
-database_name = os.getenv("MONGO_DBNAME", "dockership")
+    Args:
+        manifest (list): Current ship layout.
+        unload_list (list): Containers to unload.
+        load_list (list): Containers to load.
 
-client = MongoClient(mongo_uri)
-db = client[database_name]
+    Returns:
+        list: A sequence of operations (load/unload) as a list of steps, including intermediate grid states.
+    """
+    operations = []
+    unload_queue = list(unload_list)
+    load_queue = list(load_list)
 
-# Define collections
-moves_collection = db.moves
-log_collection = db.logs
+    while unload_queue or load_queue:
+        # Prioritize unloading to keep the ship clear
+        if unload_queue:
+            container = unload_queue.pop(0)
+            for i, row in enumerate(manifest):
+                for j, slot in enumerate(row):
+                    if slot == container:
+                        operations.append({
+                            "action": "UNLOAD",
+                            "description": f"Unloaded container {container} from position [{i}, {j}]",
+                            "grid": copy.deepcopy(manifest)
+                        })
+                        manifest[i][j] = "UNUSED"
+                        log_user_action(
+                            logs_collection,
+                            "system",
+                            f"Unloaded container {container} from position [{i}, {j}]"
+                        )
+                        break
+                else:
+                    continue
+                break
 
-def loading_task():
-    st.title("Loading Task")
-    st.write("Welcome to the Loading Task page.")
+        # Intertwine loading
+        if load_queue:
+            container = load_queue.pop(0)
+            for i, row in enumerate(manifest):
+                for j, slot in enumerate(row):
+                    if slot == "UNUSED":
+                        operations.append({
+                            "action": "LOAD",
+                            "description": f"Loaded container {container} to position [{i}, {j}]",
+                            "grid": copy.deepcopy(manifest),
+                            "container": container,  # Add container name for tracking
+                        })
+                        manifest[i][j] = container
+                        log_user_action(
+                            logs_collection,
+                            "system",
+                            f"Loaded container {container} to position [{i}, {j}]"
+                        )
+                        break
+                else:
+                    continue
+                break
 
-    # Ensure the file content is available in session state
-    if "file_content" not in st.session_state:
-        st.error("No file uploaded. Please upload a file first.")
-        return
+    return operations
 
-    # Retrieve file content from session state
-    file_content = st.session_state.file_content
 
-    # Parse and display the grid
-    grid = parse_input(file_content.splitlines())
-    display_grid(grid, title="Loading Task Layout")
+def execute_operations(manifest, operations):
+    """
+    Executes the sequence of operations on the manifest.
 
-    # Call the container management functionality
-    # container_management_page()
+    Args:
+        manifest (list): Current ship layout.
+        operations (list): List of operations (LOAD/UNLOAD) to execute.
+
+    Returns:
+        list: Updated ship manifest after all operations.
+    """
+    for operation in operations:
+        action = operation["action"]
+        container = operation.get("container")  # Fetch container name for loading
+        grid = operation["grid"]  # Update to the operation's grid state
+        i, j = operation["grid"]
+
+        if action == "LOAD":
+            manifest[i][j] = container
+        elif action == "UNLOAD":
+            manifest[i][j] = "UNUSED"
+
+    return manifest

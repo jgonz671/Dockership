@@ -12,9 +12,10 @@ from pages.auth.login import login
 from pages.auth.register import register
 from pages.file_handler.file_handler import file_handler
 from pages.tasks.operation import operation
-
+from pages.tasks.loading import loading_task
+from pages.tasks.balancing import balancing_page
 # Load environment variables
-load_dotenv()
+load_dotenv()   
 
 # Initialize MongoDB
 db_config = DBConfig()
@@ -40,6 +41,8 @@ def render_page(page_name):
         "register": register,
         "file_handler": file_handler,
         "operation": operation,
+        "loading": loading_task,
+        "balancing": balancing_page
     }
 
     # Render the appropriate page

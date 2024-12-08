@@ -18,11 +18,21 @@ def perform_operation(username: str, operation_type: str):
     Returns:
         str: The page to navigate to after the operation.
     """
-    # Log the action
+    # Map operation types to log messages
+    operation_map = {
+        "loading": "Loading/Unloading containers",
+        "balancing": "Balancing the ship's load",
+    }
+
+    # Ensure operation type is valid
+    if operation_type not in operation_map:
+        raise ValueError(f"Invalid operation type: {operation_type}")
+
+    # Log the operation action
     log_user_action(
         logs_collection,
         username,
-        f"User initiated the {operation_type} operation.",
+        f"User initiated the {operation_map[operation_type]} operation.",
         "",
     )
 
