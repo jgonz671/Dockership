@@ -1,25 +1,17 @@
-# Dockership/utils/file_handler.py
-
-from utils.validators import validate_file_content
 from utils.logging import log_user_action
 
 
-def process_file(file_content):
+def process_file_content(file_content):
     """
-    Processes the uploaded file content.
+    Processes the uploaded file content for further use.
 
     Args:
         file_content (str): The content of the uploaded file.
 
     Returns:
-        dict: A dictionary containing processed data or metadata.
+        list: A list of lines from the file content.
     """
-    lines = file_content.splitlines()
-    processed_data = {
-        "line_count": len(lines),
-        "first_10_lines": lines[:10],
-    }
-    return processed_data
+    return file_content.splitlines()
 
 
 def log_file_upload(logs_collection, username, filename):

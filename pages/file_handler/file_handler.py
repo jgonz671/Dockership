@@ -1,9 +1,8 @@
-# Dockership/pages/file_handler/file_handler.py
-
 import streamlit as st
-from utils.file_handler import process_file, log_file_upload, log_proceed_to_operations
+from utils.file_handler import process_file_content, log_file_upload, log_proceed_to_operations
 from utils.validators import validate_file_content
-from utils.components.buttons import create_button, create_navigation_button, create_logout_button
+from utils.components.buttons import create_button, create_logout_button
+from tasks.balancing import create_ship_grid, update_ship_grid
 from config.db_config import DBConfig
 
 # Initialize DBConfig
@@ -14,8 +13,8 @@ logs_collection = db_config.get_collection("logs")
 
 def file_handler():
     """
-    Frontend for the File Handler page. Allows users to upload a file, processes it,
-    and displays feedback. Logs actions such as file uploads and proceeding to operations.
+    Frontend for the File Handler page. Allows users to upload a file, process it,
+    and store content for loading/unloading tasks.
     """
     st.title("File Handler")
     username = st.session_state.get("user_name", "Guest")
@@ -23,15 +22,12 @@ def file_handler():
     st.write(f"Hello, {first_name}!")
 
     # File uploader
-    uploaded_file = st.file_uploader(
-        "Upload a .txt file to proceed:", type=["txt"])
+    uploaded_file = st.file_uploader("Upload a .txt file to proceed:", type=["txt"])
 
     if uploaded_file:
-        # Extract and display file content
+        # Read file content
         file_content = uploaded_file.read().decode("utf-8")
         filename = uploaded_file.name
-        st.write("Uploaded File Content:")
-        st.text(file_content)
 
         # Log file upload
         log_file_upload(logs_collection, username, filename)
@@ -42,23 +38,28 @@ def file_handler():
             st.error(error_message)
             return
 
-        # Process the file
-        processed_data = process_file(file_content)
+        # Process file and initialize grid
+        file_lines = process_file_content(file_content)
+        st.session_state["file_content"] = file_content  # Store raw manifest
+        st.session_state["ship_grid"] = create_ship_grid(8, 12)  # Initialize grid
+        st.session_state["containers"] = []  # Initialize container list
+        update_ship_grid(file_content, st.session_state["ship_grid"], st.session_state["containers"])
+
+        # Initialize manifest for loading/unloading tasks
+        st.session_state["manifest"] = st.session_state["ship_grid"]  # Add this line
 
         # Display processed data
         st.success("File processed successfully!")
-        st.write(f"Total lines in file: {processed_data['line_count']}")
-        st.write("First 10 lines of the file:")
-        st.text("\n".join(processed_data["first_10_lines"]))
+        st.write(f"File Name: {filename}")
+        st.write(f"Total Lines in File: {len(file_lines)}")
+        st.write("Preview of Uploaded File:")
+        st.text("\n".join(file_lines[:10]))  # Show first 10 lines
 
-        # Store processed content in session state
-        st.session_state.file_content = file_content
-
-        # Proceed to operations
+        # Provide navigation to the next page
         if create_button("Proceed to Operations"):
             log_proceed_to_operations(logs_collection, username)
-            st.session_state["page"] = "operation"  # Update page to "operation"
-            st.rerun()  # Trigger rerun to navigate to the new page
+            st.session_state["page"] = "operation"
+            st.rerun()
 
-    # Logout button 
+    # Logout button
     create_logout_button(st.session_state)
