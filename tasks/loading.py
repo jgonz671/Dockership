@@ -1,5 +1,7 @@
 from utils.logging import log_user_action
 from config.db_config import DBConfig
+from utils.visualizer import convert_to_display_grid
+from tasks.balancing import Container, Slot
 import copy
 
 # Initialize database connection
@@ -13,35 +15,34 @@ def optimize_load_unload(manifest, unload_list, load_list):
     Optimizes the loading/unloading sequence to minimize time and crane idle.
 
     Args:
-        manifest (list): Current ship layout.
+        manifest (list): Current ship grid layout with Slot objects.
         unload_list (list): Containers to unload.
         load_list (list): Containers to load.
 
     Returns:
-        list: A sequence of operations (load/unload) as a list of steps, including intermediate grid states.
+        list: A sequence of operations (load/unload) with intermediate grid states.
     """
     operations = []
     unload_queue = list(unload_list)
     load_queue = list(load_list)
+    grid_states = []
 
     while unload_queue or load_queue:
-        # Prioritize unloading to keep the ship clear
+        # Prioritize unloading
         if unload_queue:
             container = unload_queue.pop(0)
             for i, row in enumerate(manifest):
                 for j, slot in enumerate(row):
-                    if slot == container:
+                    if slot.has_container and slot.container.name == container:
                         operations.append({
                             "action": "UNLOAD",
                             "description": f"Unloaded container {container} from position [{i}, {j}]",
-                            "grid": copy.deepcopy(manifest)
+                            "grid": convert_to_display_grid(copy.deepcopy(manifest))
                         })
-                        manifest[i][j] = "UNUSED"
-                        log_user_action(
-                            logs_collection,
-                            "system",
-                            f"Unloaded container {container} from position [{i}, {j}]"
-                        )
+                        slot.container = None
+                        slot.has_container = False
+                        slot.available = True
+                        grid_states.append(convert_to_display_grid(copy.deepcopy(manifest)))
                         break
                 else:
                     continue
@@ -52,47 +53,19 @@ def optimize_load_unload(manifest, unload_list, load_list):
             container = load_queue.pop(0)
             for i, row in enumerate(manifest):
                 for j, slot in enumerate(row):
-                    if slot == "UNUSED":
+                    if slot.available:
+                        slot.container = Container(name=container, weight=0)  # Default weight as 0
+                        slot.has_container = True
+                        slot.available = False
                         operations.append({
                             "action": "LOAD",
                             "description": f"Loaded container {container} to position [{i}, {j}]",
-                            "grid": copy.deepcopy(manifest),
-                            "container": container,  # Add container name for tracking
+                            "grid": convert_to_display_grid(copy.deepcopy(manifest))
                         })
-                        manifest[i][j] = container
-                        log_user_action(
-                            logs_collection,
-                            "system",
-                            f"Loaded container {container} to position [{i}, {j}]"
-                        )
+                        grid_states.append(convert_to_display_grid(copy.deepcopy(manifest)))
                         break
                 else:
                     continue
                 break
 
-    return operations
-
-
-def execute_operations(manifest, operations):
-    """
-    Executes the sequence of operations on the manifest.
-
-    Args:
-        manifest (list): Current ship layout.
-        operations (list): List of operations (LOAD/UNLOAD) to execute.
-
-    Returns:
-        list: Updated ship manifest after all operations.
-    """
-    for operation in operations:
-        action = operation["action"]
-        container = operation.get("container")  # Fetch container name for loading
-        grid = operation["grid"]  # Update to the operation's grid state
-        i, j = operation["grid"]
-
-        if action == "LOAD":
-            manifest[i][j] = container
-        elif action == "UNLOAD":
-            manifest[i][j] = "UNUSED"
-
-    return manifest
+    return operations, grid_states

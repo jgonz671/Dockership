@@ -4,7 +4,6 @@ Utility module for parsing input data and visualizing ship grid layouts.
 """
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
 import re
@@ -46,13 +45,12 @@ def parse_input(input_lines, rows=8, cols=12):
     return grid
 
 
-
 def display_grid(grid, title="Grid Layout"):
     """
     Visualizes the ship's container grid layout with metrics.
 
     Args:
-        grid (numpy.ndarray): The grid layout to display.
+        grid (numpy.ndarray or list): The grid layout to display.
         title (str): The title of the grid.
     """
     if isinstance(grid, list):  # Convert list to NumPy array if needed
@@ -73,7 +71,7 @@ def display_grid(grid, title="Grid Layout"):
             ax.text(
                 j + 0.5, i + 0.5, text,
                 ha="center", va="center",
-                fontsize=8, color="white"
+                fontsize=10, color="white" if color == "blue" else "black"
             )
 
     ax.set_xlim(0, grid.shape[1])
@@ -82,4 +80,27 @@ def display_grid(grid, title="Grid Layout"):
     plt.title(title)
     st.pyplot(fig)
 
+
+def convert_to_display_grid(ship_grid):
+    """
+    Converts a ship grid with Slot objects to a NumPy array for visualization.
+
+    Args:
+        ship_grid (list of lists): Ship grid with Slot objects.
+
+    Returns:
+        np.ndarray: 2D array ready for visualization.
+    """
+    display_grid = np.empty((len(ship_grid), len(ship_grid[0])), dtype=object)
+
+    for i, row in enumerate(ship_grid):
+        for j, slot in enumerate(row):
+            if slot.container:
+                display_grid[i, j] = slot.container.name
+            elif slot.available:
+                display_grid[i, j] = "UNUSED"
+            else:
+                display_grid[i, j] = "NAN"
+
+    return display_grid
 
