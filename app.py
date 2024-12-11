@@ -4,10 +4,10 @@ import streamlit as st
 from pymongo import MongoClient
 from datetime import datetime
 
-# Set page config at the very beginning
+
 st.set_page_config(page_title="Dockership Application", layout="wide")
 
-# Import pages and components
+
 from config.db_config import DBConfig
 from utils.state_manager import StateManager
 from pages.auth.login import login
@@ -16,28 +16,26 @@ from pages.file_handler.file_handler import file_handler
 from pages.tasks.operation import operation
 from pages.tasks.balancing import balancing_page
 
-# Load environment variables
+
 load_dotenv()
 
-# Initialize MongoDB
+
 db_config = DBConfig()
 db = db_config.connect()
 
-# Check database connection
+
 if db_config.check_connection():
     st.sidebar.success("✅ Connected to MongoDB successfully.")
 else:
     st.sidebar.error("❌ Failed to connect to MongoDB. Check your configuration.")
     st.stop()
 
-# Initialize session state manager
+
 state_manager = StateManager(st.session_state)
 
-# MongoDB collections
-manifest_collection = db.manifest
-action_logs_collection = db.action_logs
+manifest_collection = db_config.get_collection("manifest")
+action_logs_collection = db_config.get_collection("logs")
 
-# Enhanced Loading Task
 
 def loading_task():
     """
@@ -53,7 +51,7 @@ def loading_task():
     else:
         st.write("No containers in the manifest.")
 
-    # Action Logging Section
+ 
     st.subheader("Action Logs")
     logs = list(action_logs_collection.find({}, {"_id": 0}))
     if logs:
@@ -61,7 +59,7 @@ def loading_task():
     else:
         st.write("No actions logged yet.")
 
-    # Container Operations
+
     st.subheader("Manage Containers")
     with st.form("container_form"):
         container_id = st.text_input("Container ID")
@@ -110,7 +108,7 @@ def loading_task():
                 except Exception as e:
                     st.error(f"Error unloading container: {e}")
 
-# Page router function
+
 def render_page(page_name):
     """
     Renders the appropriate page based on the page_name.
@@ -124,9 +122,9 @@ def render_page(page_name):
         "balancing": balancing_page
     }
 
-    # Render the appropriate page
+ 
     page_mapping.get(page_name, login)()
 
-# Main application loop
+
 if __name__ == "__main__":
     render_page(state_manager.get_page())
