@@ -60,3 +60,24 @@ def create_logout_button(session_state):
             st.success("Logout successful!")
 
     return create_button("Logout", on_click=logout)
+
+def create_centered_buttons(label_left, label_right, action_left, action_right):
+    """
+    Creates two buttons on the same horizontal line, centered to the page, equidistant from each other.
+
+    Args:
+        label_left (str): Text for the left button.
+        label_right (str): Text for the right button.
+        action_left (function): Function to execute on clicking the left button.
+        action_right (function): Function to execute on clicking the right button.
+    """
+    col1, col2 = st.columns(2, gap="large")
+    with col1:
+        if create_button(label_left, on_click=action_left):
+            return "left_clicked"
+
+    with col2:
+        if create_button(label_right, on_click=action_right):
+            return "right_clicked"
+
+    return None
