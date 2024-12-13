@@ -2,6 +2,7 @@ import copy
 import re
 import numpy as np
 import time
+import plotly.graph_objects as go
 
 from collections.abc import Iterable
 
@@ -34,8 +35,6 @@ def create_ship_grid(rows, columns):
 
     return ship_grid
 
-import numpy as np
-import plotly.graph_objects as go
 
 # Function to parse the manuscript
 def parse_manifest(file_lines):

@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+from utils.components.buttons import create_navigation_button
 from tasks.ship_balancer import (
     create_ship_grid,
     update_ship_grid,
@@ -8,6 +9,7 @@ from tasks.ship_balancer import (
     calculate_balance,
     balance,
 )
+
 
 def plotly_visualize_grid(grid, title="Ship Grid"):
     """
@@ -83,7 +85,7 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
             z=z,
             colorscale=[
                 [0, "white"],       # Empty slots
-                [0.5, "lightgray"], # NAN slots
+                [0.5, "lightgray"],  # NAN slots
                 [1, "blue"],        # Occupied slots
             ],
             hoverinfo="text",
@@ -113,43 +115,58 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
         plot_bgcolor="white",
     )
     return fig
+
+
 def balancing_page():
-    # Streamlit App
+    """
+    Streamlit page for managing ship balancing tasks.
+    """
+    # Create a container for the back button and place it at the top-left corner
+    top_left = st.container()
+    with top_left:
+        # Create two columns: one narrow (for the button) and one wide
+        col1, col2 = st.columns([1, 9])
+        with col1:
+            create_navigation_button(
+                label="<-- Back",
+                page_name="operation",
+                session_state=st.session_state
+            )
+
     st.title("Ship Balancing Project")
 
     # Sidebar for grid setup
     st.sidebar.header("Ship Grid Setup")
     rows = 8  # Fixed to match the manifest
     columns = 12  # Fixed to match the manifest
-    
+
+    # Initialize session state
     if "steps" not in st.session_state:
         st.session_state["steps"] = []
-        
+
     if "final_plot" not in st.session_state:
         st.session_state.final_plot = None
 
-    # Initialize session state
     if "ship_grid" not in st.session_state:
         st.session_state.ship_grid = create_ship_grid(rows, columns)
         st.session_state.containers = []
         st.session_state.initial_plot = None
-        st.session_state.final_plot = None
-        st.session_state.steps = []
 
     # Use manuscript from file_handler
     if "file_content" in st.session_state:
         try:
-            # Use file content from file_handler
             file_content = st.session_state["file_content"].splitlines()
-            update_ship_grid(file_content, st.session_state.ship_grid, st.session_state.containers)
+            update_ship_grid(
+                file_content, st.session_state["ship_grid"], st.session_state["containers"])
             st.session_state.initial_plot = plotly_visualize_grid(
-                st.session_state.ship_grid, title="Initial Ship Grid"
+                st.session_state["ship_grid"], title="Initial Ship Grid"
             )
             st.success("Ship grid updated successfully from manuscript.")
         except Exception as e:
             st.error(f"Error processing the manuscript: {e}")
     else:
-        st.error("No manuscript available. Please upload a file in the File Handler page.")
+        st.error(
+            "No manuscript available. Please upload a file in the File Handler page.")
 
     # Display initial grid
     if st.session_state.initial_plot:
@@ -158,20 +175,23 @@ def balancing_page():
 
     # Perform balancing
     if st.button("Balance Ship"):
-        left_balance, right_balance, balanced = calculate_balance(st.session_state.ship_grid)
+        left_balance, right_balance, balanced = calculate_balance(
+            st.session_state["ship_grid"])
         if balanced:
             st.success("The ship is already balanced!")
         else:
-            steps, ship_grids, status = balance(st.session_state.ship_grid, st.session_state.containers)
+            steps, ship_grids, status = balance(
+                st.session_state["ship_grid"], st.session_state["containers"])
             st.session_state.steps = steps
             st.session_state.ship_grid = ship_grids[-1]
             st.session_state.final_plot = plotly_visualize_grid(
-                st.session_state.ship_grid, title="Final Ship Grid After Balancing"
+                st.session_state["ship_grid"], title="Final Ship Grid After Balancing"
             )
             if status:
                 st.success("Ship balanced successfully!")
             else:
-                st.warning("Ship could not be perfectly balanced. Check balancing steps.")
+                st.warning(
+                    "Ship could not be perfectly balanced. Check balancing steps.")
 
     # Display balancing steps
     if st.session_state.steps:
