@@ -1,5 +1,4 @@
 import streamlit as st
-# Import utility functions
 from utils.grid_utils import plotly_visualize_grid, validate_ship_grid
 from tasks.loading import optimize_load_unload
 from utils.state_manager import StateManager
