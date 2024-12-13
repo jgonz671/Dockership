@@ -1,6 +1,6 @@
 from utils.logging import log_user_action
 from config.db_config import DBConfig
-from utils.visualizer import convert_to_display_grid
+from utils.visualizer import plotly_visualize_grid
 from tasks.balancing import Container, Slot
 import copy
 
@@ -8,7 +8,6 @@ import copy
 db_config = DBConfig()
 db = db_config.connect()
 logs_collection = db_config.get_collection("logs")
-
 
 def optimize_load_unload(manifest, unload_list, load_list):
     """
@@ -37,12 +36,12 @@ def optimize_load_unload(manifest, unload_list, load_list):
                         operations.append({
                             "action": "UNLOAD",
                             "description": f"Unloaded container {container} from position [{i}, {j}]",
-                            "grid": convert_to_display_grid(copy.deepcopy(manifest))
+                            "grid": plotly_visualize_grid(copy.deepcopy(manifest), title=f"Unloading {container} Step")
                         })
                         slot.container = None
                         slot.has_container = False
                         slot.available = True
-                        grid_states.append(convert_to_display_grid(copy.deepcopy(manifest)))
+                        grid_states.append(plotly_visualize_grid(copy.deepcopy(manifest), title=f"State After Unloading {container}"))
                         break
                 else:
                     continue
@@ -60,9 +59,9 @@ def optimize_load_unload(manifest, unload_list, load_list):
                         operations.append({
                             "action": "LOAD",
                             "description": f"Loaded container {container} to position [{i}, {j}]",
-                            "grid": convert_to_display_grid(copy.deepcopy(manifest))
+                            "grid": plotly_visualize_grid(copy.deepcopy(manifest), title=f"Loading {container} Step")
                         })
-                        grid_states.append(convert_to_display_grid(copy.deepcopy(manifest)))
+                        grid_states.append(plotly_visualize_grid(copy.deepcopy(manifest), title=f"State After Loading {container}"))
                         break
                 else:
                     continue

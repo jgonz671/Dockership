@@ -1,9 +1,8 @@
 import streamlit as st
-from utils.visualizer import convert_to_display_grid, display_grid
+from utils.visualizer import plotly_visualize_grid
 from tasks.loading import optimize_load_unload
 from utils.state_manager import StateManager
 from utils.components.buttons import create_navigation_button
-
 
 def loading_task():
     """
@@ -42,8 +41,7 @@ def loading_task():
         st.warning("No containers available in the manifest.")
 
     # Display the current grid
-    visual_grid = convert_to_display_grid(st.session_state["ship_grid"])
-    display_grid(visual_grid, title="Current Ship Layout")
+    st.plotly_chart(plotly_visualize_grid(st.session_state["ship_grid"], title="Current Ship Layout"))
 
     # Input for loading/unloading operations
     st.subheader("Enter Loading/Unloading Instructions")
@@ -90,8 +88,7 @@ def loading_task():
         if current_step < len(operations):
             st.write(
                 f"Step {current_step + 1}: {operations[current_step]['description']}")
-            display_grid(grid_states[current_step],
-                         title=f"Step {current_step + 1}")
+            st.plotly_chart(operations[current_step]['grid'])
 
             # Navigation buttons
             col1, col2 = st.columns(2)
