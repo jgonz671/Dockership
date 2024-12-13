@@ -41,6 +41,7 @@ def file_handler():
         # Process file and initialize grid
         file_lines = process_file_content(file_content)
         st.session_state["file_content"] = file_content  # Store raw manifest
+        st.session_state["file_name"] = filename  # Store the file name
         st.session_state["ship_grid"] = create_ship_grid(8, 12)  # Initialize grid
         st.session_state["containers"] = []  # Initialize container list
         update_ship_grid(file_content, st.session_state["ship_grid"], st.session_state["containers"])
