@@ -1,6 +1,7 @@
 # utils/validators.py
 import re
 from config.db_config import DBConfig
+from tasks.ship_balancer import Slot
 
 # Initialize DBConfig
 db_config = DBConfig()
@@ -89,3 +90,22 @@ def validate_file_content(file_content):
     if len(file_content) > 10000:  # Arbitrary limit for demonstration
         return False, "The uploaded file exceeds the allowed size."
     return True, ""
+
+def validate_ship_grid(ship_grid):
+    """
+    Validates the structure of a ship grid.
+
+    Args:
+        ship_grid (list of lists): The grid to validate.
+
+    Returns:
+        bool: True if valid, raises ValueError otherwise.
+
+    Raises:
+        ValueError: If the grid is not a 2D list of Slot objects.
+    """
+    if not isinstance(ship_grid, list) or not all(isinstance(row, list) for row in ship_grid):
+        raise ValueError("Grid must be a 2D list.")
+    if not all(all(isinstance(slot, Slot) for slot in row) for row in ship_grid):
+        raise ValueError("Grid must contain only Slot objects.")
+    return True

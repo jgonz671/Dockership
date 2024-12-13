@@ -1,9 +1,9 @@
 import streamlit as st
-from utils.visualizer import plotly_visualize_grid
+# Import utility functions
+from utils.grid_utils import plotly_visualize_grid, validate_ship_grid
 from tasks.loading import optimize_load_unload
 from utils.state_manager import StateManager
 from utils.components.buttons import create_navigation_button
-from tasks.ship_balancer import Slot  # Import Slot to validate grid structure
 
 
 def loading_task():
@@ -29,16 +29,15 @@ def loading_task():
         st.session_state["ship_grid"] = st.session_state["updated_grid"]
     elif "ship_grid" not in st.session_state or not st.session_state["ship_grid"]:
         st.error(
-            "No manifest loaded. Please upload a manifest in the File Handler page.")
+            "No manifest loaded. Please upload a manifest in the File Handler page."
+        )
         return
 
-    # Validate the grid structure
+    # Validate the grid structure using grid_utils
     try:
         grid = st.session_state["ship_grid"]
-        if not all(isinstance(row, list) and all(isinstance(slot, Slot) for slot in row) for row in grid):
-            raise ValueError(
-                "The grid structure is invalid. Ensure it is a 2D array of Slot objects.")
-    except Exception as e:
+        validate_ship_grid(grid)  # Ensures the grid is structured as expected
+    except ValueError as e:
         st.error(f"Grid validation failed: {e}")
         return
 
@@ -54,9 +53,10 @@ def loading_task():
     else:
         st.warning("No containers available in the manifest.")
 
-    # Display the current grid
+    # Display the current grid using plotly_visualize_grid from grid_utils
     st.plotly_chart(plotly_visualize_grid(
-        st.session_state["ship_grid"], title="Current Ship Layout"))
+        st.session_state["ship_grid"], title="Current Ship Layout"
+    ))
 
     # Input for loading/unloading operations
     st.subheader("Enter Loading/Unloading Instructions")
@@ -72,7 +72,8 @@ def loading_task():
         # Check if input is valid
         if not loading_list and not unloading_list:
             st.warning(
-                "Please provide at least one container to load or unload.")
+                "Please provide at least one container to load or unload."
+            )
             return
 
         # Log inputs for debugging
@@ -83,10 +84,12 @@ def loading_task():
         # Calculate operations
         try:
             operations, grid_states = optimize_load_unload(
-                st.session_state["ship_grid"], unloading_list, loading_list)
+                st.session_state["ship_grid"], unloading_list, loading_list
+            )
             if not operations:
                 st.warning(
-                    "No valid operations found. Ensure container names match those in the manifest.")
+                    "No valid operations found. Ensure container names match those in the manifest."
+                )
             else:
                 st.session_state["operations"] = operations
                 st.session_state["grid_states"] = grid_states
@@ -94,7 +97,8 @@ def loading_task():
                 # Save updated grid
                 st.session_state["updated_grid"] = grid_states[-1]
                 st.success(
-                    "Optimal operations calculated! Use the navigation buttons below to proceed.")
+                    "Optimal operations calculated! Use the navigation buttons below to proceed."
+                )
         except Exception as e:
             st.error(f"Error calculating operations: {e}")
 
@@ -107,9 +111,11 @@ def loading_task():
 
         if current_step < len(operations):
             st.write(
-                f"Step {current_step + 1}: {operations[current_step]['description']}")
+                f"Step {current_step + 1}: {operations[current_step]['description']}"
+            )
             st.plotly_chart(plotly_visualize_grid(
-                grid_states[current_step], title=f"Step {current_step + 1}"))
+                grid_states[current_step], title=f"Step {current_step + 1}"
+            ))
 
             # Navigation buttons
             col1, col2 = st.columns(2)

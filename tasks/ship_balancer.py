@@ -8,6 +8,10 @@ from collections.abc import Iterable
 
 
 class Container:
+    """
+    Represents a container with a name and weight.
+    """
+
     def __init__(self, name, weight):
         self.name = name
         self.name_adj = re.findall(r'^.*\d{4}', name)
@@ -16,23 +20,28 @@ class Container:
 
 
 class Slot:
-    def __init__(self, container: Container, hasContainer, available):
+    """
+    Represents a slot in the ship grid. Each slot can contain a container or be empty/unused.
+    """
+
+    def __init__(self, container: Container, has_container: bool, available: bool):
         self.container = container  # Container object or None
-        self.has_container = hasContainer  # Boolean: True if container is present
+        self.has_container = has_container  # Boolean: True if container is present
         self.available = available  # Boolean: True if slot is available
 
 
-# Create a ship grid with size
 def create_ship_grid(rows, columns):
-    ship_grid = []
+    """
+    Creates an empty ship grid with the specified dimensions.
 
-    for i in range(rows):
-        container_row = []
-        for _ in range(columns):
-            container_row.append(Slot(None, False, False))
-        ship_grid.append(container_row)
+    Args:
+        rows (int): Number of rows in the grid.
+        columns (int): Number of columns in the grid.
 
-    return ship_grid
+    Returns:
+        list: A 2D grid (list of lists) containing Slot objects.
+    """
+    return [[Slot(None, False, False) for _ in range(columns)] for _ in range(rows)]
 
 
 # Function to parse the manuscript
@@ -159,6 +168,17 @@ def visualize_ship_grid(ship_grid, title="Ship Grid"):
 # Update ship grid with manifest info, update list of containers accordingly
 # Update the ship grid based on file data
 def update_ship_grid(lines, ship_grid, containers):
+    """
+    Updates the ship grid with manifest data from file lines.
+
+    Args:
+        lines (list): Lines from the manifest file.
+        ship_grid (list): The current ship grid.
+        containers (list): List to store container locations.
+
+    Returns:
+        None
+    """
     for line in lines:
         slot_data = line.split()
         loc = [int(val) - 1 for val in re.sub(r"[\[\]]",
@@ -175,8 +195,6 @@ def update_ship_grid(lines, ship_grid, containers):
         else:
             ship_grid[x][y] = Slot(
                 Container(status, weight), has_container=True, available=False)
-            if len(ship_grid[x][y].container.name_adj) > 0:
-                ship_grid[x][y].container.name_check = True
             containers.append(loc)
 
 
