@@ -1,12 +1,12 @@
 import streamlit as st
-import plotly.graph_objects as go
-<<<<<<< HEAD
-from copy import deepcopy
-=======
 from utils.components.buttons import create_navigation_button
->>>>>>> d9732986baf132a2f94962ade7d5e0c6d62b9f94
+from utils.grid_utils import create_ship_grid, validate_ship_grid, plotly_visualize_grid
+from tasks.ship_balancer import update_ship_grid, calculate_balance, balance
+import plotly.graph_objects as go
+from copy import deepcopy
+import os
+
 from tasks.ship_balancer import (
-    create_ship_grid,
     update_ship_grid,
     calculate_balance,
     balance,
@@ -184,7 +184,6 @@ def convert_grid_to_manuscript(ship_grid):
             manuscript_lines.append(line)
     return "\n".join(manuscript_lines)
 
-import os
 
 def append_outbound_to_filename(filename):
     """
@@ -560,7 +559,6 @@ def plotly_visualize_grid_with_overlay(grid, from_coords, to_coords, title="Ship
     )
     return fig
 
-<<<<<<< HEAD
 def generate_animation_with_annotations():
     """
     Generates a single Plotly animation for the balancing steps with annotations for each sub-step.
@@ -812,8 +810,6 @@ def generate_stepwise_animation(initial_grid, steps, ship_grids):
     )
 
     return fig
-=======
->>>>>>> d9732986baf132a2f94962ade7d5e0c6d62b9f94
 
 def balancing_page():
     """
@@ -831,8 +827,6 @@ def balancing_page():
             )
 
     st.title("Ship Balancing Project")
-
-<<<<<<< HEAD
     # Sidebar for grid setup
     st.sidebar.header("Ship Grid Setup")
     rows = 8  # Fixed to match the manifest
@@ -884,7 +878,6 @@ def balancing_page():
 
         # Calculate balance and perform balancing
         left_balance, right_balance, balanced = calculate_balance(st.session_state.ship_grid)
-=======
     # Ensure a ship grid is available
     if "updated_grid" in st.session_state and st.session_state["updated_grid"]:
         st.session_state["ship_grid"] = st.session_state["updated_grid"]
@@ -893,29 +886,52 @@ def balancing_page():
             "No manifest loaded. Please upload a manifest in the File Handler page.")
         return
 
+    # Validate the grid structure
+    try:
+        validate_ship_grid(st.session_state["ship_grid"])
+    except ValueError as e:
+        st.error(f"Grid validation failed: {e}")
+        return
+
     # Display the current grid
-    visual_grid = st.session_state["ship_grid"]
     st.plotly_chart(plotly_visualize_grid(
-        visual_grid, title="Current Ship Layout"))
+        st.session_state["ship_grid"], title="Current Ship Layout"))
 
     # Perform balancing
     if st.button("Balance Ship"):
         left_balance, right_balance, balanced = calculate_balance(
             st.session_state["ship_grid"])
->>>>>>> d9732986baf132a2f94962ade7d5e0c6d62b9f94
         if balanced:
             st.success("The ship is already balanced!")
         else:
+
+            try:
+                steps, ship_grids, status = balance(
+                    st.session_state["ship_grid"], st.session_state.get("containers", []))
+                st.session_state["steps"] = steps
+                # Save updated grid
+                st.session_state["updated_grid"] = ship_grids[-1]
+                st.session_state["final_plot"] = plotly_visualize_grid(
+                    st.session_state["updated_grid"], title="Final Ship Grid After Balancing"
+                )
+                if status:
+                    st.success("Ship balanced successfully!")
+                else:
+                    st.warning(
+                        "Ship could not be perfectly balanced. Check balancing steps.")
+            except Exception as e:
+                st.error(f"An error occurred during balancing: {e}")
+
             steps, ship_grids, status = balance(
                 st.session_state["ship_grid"], st.session_state.get("containers", []))
             st.session_state.steps = steps
-<<<<<<< HEAD
+
             st.session_state.ship_grids = ship_grids  # Store intermediate grids
             st.session_state.ship_grid = ship_grids[-1]
-=======
+
             # Save updated grid
             st.session_state["updated_grid"] = ship_grids[-1]
->>>>>>> d9732986baf132a2f94962ade7d5e0c6d62b9f94
+
             st.session_state.final_plot = plotly_visualize_grid(
                 st.session_state["updated_grid"], title="Final Ship Grid After Balancing"
             )
@@ -925,7 +941,6 @@ def balancing_page():
                 st.warning(
                     "Ship could not be perfectly balanced. Check balancing steps.")
 
-<<<<<<< HEAD
     # Tabs for navigation
     selected_tab = st.radio(
         "Choose a tab",
@@ -1167,7 +1182,6 @@ def balancing_page():
 
 
         
-=======
     # Display balancing steps
     if st.session_state.get("steps"):
         st.subheader("Balancing Steps")
@@ -1175,12 +1189,11 @@ def balancing_page():
             st.markdown(f"**Step {step_number + 1}:**")
             for sub_step_number, sub_step in enumerate(step_list):
                 st.write(f"{sub_step_number + 1}. {sub_step}")
->>>>>>> d9732986baf132a2f94962ade7d5e0c6d62b9f94
 
     # Display final grid after balancing
     if st.session_state.get("final_plot"):
         st.subheader("Final Ship Grid After Balancing")
-<<<<<<< HEAD
+
         st.plotly_chart(st.session_state.final_plot)
 
         # Generate updated manuscript
@@ -1194,6 +1207,4 @@ def balancing_page():
             file_name=outbound_filename,
             mime="text/plain",
         )
-=======
         st.plotly_chart(st.session_state["final_plot"])
->>>>>>> d9732986baf132a2f94962ade7d5e0c6d62b9f94

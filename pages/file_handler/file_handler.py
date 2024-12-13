@@ -2,7 +2,8 @@ import streamlit as st
 from utils.file_handler import process_file_content, log_file_upload, log_proceed_to_operations
 from utils.validators import validate_file_content
 from utils.components.buttons import create_button, create_logout_button
-from tasks.balancing import create_ship_grid, update_ship_grid
+from utils.grid_utils import create_ship_grid, validate_ship_grid
+from tasks.ship_balancer import update_ship_grid
 from config.db_config import DBConfig
 
 # Initialize DBConfig
@@ -22,7 +23,8 @@ def file_handler():
     st.write(f"Hello, {first_name}!")
 
     # File uploader
-    uploaded_file = st.file_uploader("Upload a .txt file to proceed:", type=["txt"])
+    uploaded_file = st.file_uploader(
+        "Upload a .txt file to proceed:", type=["txt"])
 
     if uploaded_file:
         # Read file content
@@ -42,12 +44,18 @@ def file_handler():
         file_lines = process_file_content(file_content)
         st.session_state["file_content"] = file_content  # Store raw manifest
         st.session_state["file_name"] = filename  # Store the file name
-        st.session_state["ship_grid"] = create_ship_grid(8, 12)  # Initialize grid
+        st.session_state["ship_grid"] = create_ship_grid(
+            8, 12)  # Initialize empty grid
         st.session_state["containers"] = []  # Initialize container list
-        update_ship_grid(file_content, st.session_state["ship_grid"], st.session_state["containers"])
+        update_ship_grid(
+            file_lines, st.session_state["ship_grid"], st.session_state["containers"])
 
-        # Initialize manifest for loading/unloading tasks
-        st.session_state["manifest"] = st.session_state["ship_grid"]  # Add this line
+        # Validate grid structure
+        try:
+            validate_ship_grid(st.session_state["ship_grid"])
+        except ValueError as e:
+            st.error(f"Grid validation failed: {e}")
+            return
 
         # Display processed data
         st.success("File processed successfully!")
