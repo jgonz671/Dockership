@@ -23,10 +23,8 @@ def loading_task():
 
     st.title("Loading/Unloading Task")
 
-    # Ensure a ship grid is available
-    if "updated_grid" in st.session_state and st.session_state["updated_grid"]:
-        st.session_state["ship_grid"] = st.session_state["updated_grid"]
-    elif "ship_grid" not in st.session_state or not st.session_state["ship_grid"]:
+    # Ensure ship grid is loaded
+    if "ship_grid" not in st.session_state or not st.session_state["ship_grid"]:
         st.error(
             "No manifest loaded. Please upload a manifest in the File Handler page.")
         return
@@ -79,8 +77,6 @@ def loading_task():
             st.session_state["operations"] = operations
             st.session_state["grid_states"] = grid_states
             st.session_state["current_step"] = 0
-            # Save updated grid
-            st.session_state["updated_grid"] = grid_states[-1]
             st.success(
                 "Optimal operations calculated! Use the navigation buttons below to proceed.")
 
