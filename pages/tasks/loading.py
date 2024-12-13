@@ -3,6 +3,8 @@ from utils.visualizer import plotly_visualize_grid
 from tasks.loading import optimize_load_unload
 from utils.state_manager import StateManager
 from utils.components.buttons import create_navigation_button
+from tasks.ship_balancer import Slot  # Import Slot to validate grid structure
+
 
 def loading_task():
     """
@@ -30,11 +32,21 @@ def loading_task():
             "No manifest loaded. Please upload a manifest in the File Handler page.")
         return
 
+    # Validate the grid structure
+    try:
+        grid = st.session_state["ship_grid"]
+        if not all(isinstance(row, list) and all(isinstance(slot, Slot) for slot in row) for row in grid):
+            raise ValueError(
+                "The grid structure is invalid. Ensure it is a 2D array of Slot objects.")
+    except Exception as e:
+        st.error(f"Grid validation failed: {e}")
+        return
+
     # Display available container names for reference
     container_names = [
         slot.container.name
         for row in st.session_state["ship_grid"]
-        for slot in row if slot.has_container
+        for slot in row if slot.container
     ]
     if container_names:
         st.write("### Available Containers")
@@ -43,7 +55,8 @@ def loading_task():
         st.warning("No containers available in the manifest.")
 
     # Display the current grid
-    st.plotly_chart(plotly_visualize_grid(st.session_state["ship_grid"], title="Current Ship Layout"))
+    st.plotly_chart(plotly_visualize_grid(
+        st.session_state["ship_grid"], title="Current Ship Layout"))
 
     # Input for loading/unloading operations
     st.subheader("Enter Loading/Unloading Instructions")
@@ -68,19 +81,22 @@ def loading_task():
         st.write("Containers to Unload:", unloading_list)
 
         # Calculate operations
-        operations, grid_states = optimize_load_unload(
-            st.session_state["ship_grid"], unloading_list, loading_list)
-        if not operations:
-            st.warning(
-                "No valid operations found. Ensure container names match those in the manifest.")
-        else:
-            st.session_state["operations"] = operations
-            st.session_state["grid_states"] = grid_states
-            st.session_state["current_step"] = 0
-            # Save updated grid
-            st.session_state["updated_grid"] = grid_states[-1]
-            st.success(
-                "Optimal operations calculated! Use the navigation buttons below to proceed.")
+        try:
+            operations, grid_states = optimize_load_unload(
+                st.session_state["ship_grid"], unloading_list, loading_list)
+            if not operations:
+                st.warning(
+                    "No valid operations found. Ensure container names match those in the manifest.")
+            else:
+                st.session_state["operations"] = operations
+                st.session_state["grid_states"] = grid_states
+                st.session_state["current_step"] = 0
+                # Save updated grid
+                st.session_state["updated_grid"] = grid_states[-1]
+                st.success(
+                    "Optimal operations calculated! Use the navigation buttons below to proceed.")
+        except Exception as e:
+            st.error(f"Error calculating operations: {e}")
 
     # Step-by-step operations
     if "operations" in st.session_state and st.session_state["operations"]:
@@ -92,7 +108,8 @@ def loading_task():
         if current_step < len(operations):
             st.write(
                 f"Step {current_step + 1}: {operations[current_step]['description']}")
-            st.plotly_chart(operations[current_step]['grid'])
+            st.plotly_chart(plotly_visualize_grid(
+                grid_states[current_step], title=f"Step {current_step + 1}"))
 
             # Navigation buttons
             col1, col2 = st.columns(2)

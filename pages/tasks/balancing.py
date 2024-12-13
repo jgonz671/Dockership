@@ -154,10 +154,10 @@ def balancing_page():
         else:
             steps, ship_grids, status = balance(
                 st.session_state["ship_grid"], st.session_state.get("containers", []))
-            st.session_state.steps = steps
+            st.session_state["steps"] = steps
             # Save updated grid
             st.session_state["updated_grid"] = ship_grids[-1]
-            st.session_state.final_plot = plotly_visualize_grid(
+            st.session_state["final_plot"] = plotly_visualize_grid(
                 st.session_state["updated_grid"], title="Final Ship Grid After Balancing"
             )
             if status:
