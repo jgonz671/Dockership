@@ -807,10 +807,12 @@ def balancing_page():
                 st.success("Ship balanced successfully!")
             else:
                 st.warning("Ship could not be perfectly balanced. Check balancing steps.")
+    
     # Tabs for navigation
+    #["Steps", "Steps with Grids", "Steps Summary", "Block Movement Animation"]
     selected_tab = st.radio(
         "Choose a tab",
-        ["Steps", "Steps with Grids", "Steps Summary", "Block Movement Animation"],
+        ["Steps","Steps with Grids", "Block Movement Animation"],
         horizontal=True
     )
     if selected_tab == "Steps":
