@@ -4,10 +4,9 @@ from tasks.loading import optimize_load_unload
 from utils.state_manager import StateManager
 from utils.components.buttons import create_navigation_button
 
-
 def loading_task():
     """
-    UI for managing loading and unloading tasks.
+    UI for managing loading and unloading tasks with enhanced functionality.
     """
     # Create a container for the back button and place it at the top-left corner
     top_left = st.container()
@@ -29,37 +28,46 @@ def loading_task():
             "No manifest loaded. Please upload a manifest in the File Handler page.")
         return
 
-    # Display available container names for reference
-    container_names = [
-        slot.container.name
+    # Display available container names and weights for reference
+    container_info = [
+        (slot.container.name, slot.container.weight)
         for row in st.session_state["ship_grid"]
         for slot in row if slot.has_container
     ]
-    if container_names:
+    if container_info:
         st.write("### Available Containers")
-        st.write(", ".join(container_names))
+        st.write(", ".join([f"{name} (Weight: {weight})" for name, weight in container_info]))
     else:
         st.warning("No containers available in the manifest.")
 
-    # Display the current grid
-    visual_grid = convert_to_display_grid(st.session_state["ship_grid"])
+    # Display the current grid with weights
+    visual_grid = convert_to_display_grid(st.session_state["ship_grid"], include_weights=True)
     display_grid(visual_grid, title="Current Ship Layout")
 
     # Input for loading/unloading operations
     st.subheader("Enter Loading/Unloading Instructions")
+    st.text("Example Input: Container1:100, Container2:150")
     loading_input = st.text_area("Containers to Load (comma-separated):")
     unloading_input = st.text_area("Containers to Unload (comma-separated):")
 
     if st.button("Calculate Optimal Operations"):
-        loading_list = [item.strip()
-                        for item in loading_input.split(",") if item.strip()]
-        unloading_list = [item.strip()
-                          for item in unloading_input.split(",") if item.strip()]
+        # Parse loading input
+        try:
+            loading_list = [
+                {
+                    "name": item.split(":")[0].strip(),
+                    "weight": float(item.split(":")[1].strip())
+                } for item in loading_input.split(",") if item.strip()
+            ]
+        except (IndexError, ValueError):
+            st.warning("Invalid format for loading input. Use format: Name:Weight")
+            return
+
+        unloading_list = [item.strip() for item in unloading_input.split(",") if item.strip()]
 
         # Check if input is valid
         if not loading_list and not unloading_list:
-            st.warning(
-                "Please provide at least one container to load or unload.")
+            st.warning("Please provide at least one container to load or unload.")
             return
 
         # Log inputs for debugging
@@ -69,10 +77,11 @@ def loading_task():
 
         # Calculate operations
         operations, grid_states = optimize_load_unload(
-            st.session_state["ship_grid"], unloading_list, loading_list)
+            st.session_state["ship_grid"], unloading_list, loading_list
+        )
         if not operations:
             st.warning(
-                "No valid operations found. Ensure container names match those in the manifest.")
+                "No valid operations found. Ensure container names match those in the manifest and unloading follows stacking rules.")
         else:
             st.session_state["operations"] = operations
             st.session_state["grid_states"] = grid_states
