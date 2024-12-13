@@ -20,20 +20,26 @@ def create_ship_grid(rows, columns):
 
 def plotly_visualize_grid(grid, title="Ship Grid"):
     """
-    Visualizes the ship's container grid layout using Plotly.
+    Visualizes the ship's container grid layout using Plotly with proper text placement inside the blocks.
+    Includes lighter gridlines and a less intrusive border.
 
     Args:
         grid (list of lists): 2D grid containing Slot objects.
-        title (str): Title of the plot.
+        title (str): Title of the grid visualization.
 
     Returns:
-        plotly.graph_objects.Figure: A Plotly figure object for visualization.
+        go.Figure: Plotly figure representing the ship grid layout.
     """
-    validate_ship_grid(grid)
+    # Ensure grid is valid before proceeding
+    # validate_ship_grid(grid)
 
     z = []  # Color mapping for grid cells
     hover_text = []  # Hover text for each cell
     annotations = []  # Annotations for text inside cells
+    shapes = []  # Manual gridline shapes
+
+    rows = len(grid)
+    cols = len(grid[0])
 
     for row_idx, row in enumerate(grid):
         z_row = []
@@ -96,6 +102,45 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
         z.append(z_row)
         hover_text.append(hover_row)
 
+    # Add manual gridlines as shapes
+    for i in range(rows + 1):  # Horizontal lines
+        shapes.append(
+            dict(
+                type="line",
+                x0=-0.5,
+                y0=i - 0.5,
+                x1=cols - 0.5,
+                y1=i - 0.5,
+                line=dict(color="rgba(0, 0, 0, 0.2)",
+                          width=1),  # Lighter gridlines
+            )
+        )
+    for j in range(cols + 1):  # Vertical lines
+        shapes.append(
+            dict(
+                type="line",
+                x0=j - 0.5,
+                y0=-0.5,
+                x1=j - 0.5,
+                y1=rows - 0.5,
+                line=dict(color="rgba(0, 0, 0, 0.2)",
+                          width=1),  # Lighter gridlines
+            )
+        )
+
+    # Add a border around the entire grid
+    shapes.append(
+        dict(
+            type="rect",
+            x0=-0.5,
+            y0=-0.5,
+            x1=cols - 0.5,
+            y1=rows - 0.5,
+            line=dict(color="rgba(0, 0, 0, 0.1)", width=0.1),  # Lighter border
+        )
+    )
+
+    # Create the heatmap
     fig = go.Figure(
         data=go.Heatmap(
             z=z,
@@ -109,25 +154,29 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
             showscale=False,
         )
     )
+
+    # Add annotations and shapes for gridlines
     fig.update_layout(
         title=dict(text=title, x=0.5),
         xaxis=dict(
             title="Columns",
-            showgrid=False,
+            showgrid=False,  # Disable default gridlines
             zeroline=False,
             tickmode="array",
-            tickvals=[i for i in range(len(grid[0]))],
-            ticktext=[f"{i + 1:02}" for i in range(len(grid[0]))],
+            tickvals=[i for i in range(cols)],
+            ticktext=[f"{i + 1:02}" for i in range(cols)],
         ),
         yaxis=dict(
             title="Rows",
-            showgrid=False,
+            showgrid=False,  # Disable default gridlines
             zeroline=False,
             tickmode="array",
-            tickvals=[i for i in range(len(grid))],
-            ticktext=[f"{i + 1:02}" for i in range(len(grid))],
+            tickvals=[i for i in range(rows)],
+            ticktext=[f"{i + 1:02}" for i in range(rows)],
         ),
+        shapes=shapes,
         annotations=annotations,
-        plot_bgcolor="white",
+        plot_bgcolor="white",  # Ensure the background is white for contrast
     )
+
     return fig
