@@ -31,6 +31,9 @@ def visualize_steps_with_overlay():
         st.markdown("""
         Select a **Container (Step)** to view the corresponding container.  
         Then, select a **Movement (Sub-Step)** to visualize the movement of the selected container within the ship grid.
+        Blocks `Red` represent the container's current position.
+        Blocks `Green` represent the container's next position.
+        
         """)
                 
         if "initial_grid" not in st.session_state:
@@ -64,6 +67,23 @@ def visualize_steps_with_overlay():
             base_grid, (from_x, from_y), (to_x, to_y), title=f"Movement for Container {step_number + 1}, Sub-Step {sub_step_number + 1}"
         )
         st.plotly_chart(overlay_plot, use_container_width=True)
+        
+def display_total_moves_and_time():
+    """
+    Count the total number of sub-steps and display the total moves and time taken.
+    """
+    # Check if steps exist in the session state
+    if "steps" in st.session_state and st.session_state.steps:
+        # Count the total number of sub-steps
+        total_sub_steps = sum(len(step) for step in st.session_state.steps)
+        total_time = total_sub_steps  # Each sub-step equals one minute
+
+        # Display total sub-steps and time taken
+        st.markdown(f"#### 🕒 Total Time to Balance all Containers: {total_time} minutes")
+    else:
+        # Show a warning if steps are not initialized or empty
+        st.warning("No steps have been recorded yet.")
+
         
 def balancing_page():
     # Streamlit App
@@ -313,14 +333,33 @@ def balancing_page():
                     # Plot for this summarized step
                     plot = plot_grid_with_summary(base_grid, (start_x, start_y), (end_x, end_y))
                     st.plotly_chart(plot, use_container_width=True)
+                    
+    
+    print("Steps in session state:", st.session_state.get("steps", "No steps recorded"))
+    display_total_moves_and_time()
+    
     # Display final grid after balancing
     if st.session_state.final_plot:
         st.subheader("Final Ship Grid After Balancing")
         st.plotly_chart(st.session_state.final_plot)
-        
+
+        # Check if final balance metrics are already stored in session state
+        if "final_balance_metrics" not in st.session_state:
+            # Calculate and save the final balance metrics
+            left_balance_final, right_balance_final, _ = calculate_balance(st.session_state.ship_grid)
+            total_weight_final = left_balance_final + right_balance_final
+            st.session_state.final_balance_metrics = {
+                "left_balance": left_balance_final,
+                "right_balance": right_balance_final,
+                "total_weight": total_weight_final
+            }
+        else:
+            # Retrieve the saved final balance metrics
+            left_balance_final = st.session_state.final_balance_metrics["left_balance"]
+            right_balance_final = st.session_state.final_balance_metrics["right_balance"]
+            total_weight_final = st.session_state.final_balance_metrics["total_weight"]
+
         # Display final balance metrics
-        left_balance_final, right_balance_final, _ = calculate_balance(st.session_state.ship_grid)
-        total_weight_final = left_balance_final + right_balance_final
         st.markdown("### 🚢 **Balance Metrics After Balancing**")
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -329,10 +368,19 @@ def balancing_page():
             st.metric(label="⬅️ Left Balance", value=f"{left_balance_final}")
         with col3:
             st.metric(label="➡️ Right Balance", value=f"{right_balance_final}")
-        
-        # Generate updated manuscript
-        updated_manuscript = convert_grid_to_manuscript(st.session_state.ship_grid)
-        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manuscript.txt"))
+
+        # Check if updated manuscript is already stored in session state
+        if "updated_manuscript" not in st.session_state:
+            # Generate and save the updated manuscript
+            updated_manuscript = convert_grid_to_manuscript(st.session_state.ship_grid)
+            outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manuscript.txt"))
+            st.session_state.updated_manuscript = updated_manuscript
+            st.session_state.outbound_filename = outbound_filename
+        else:
+            # Retrieve the saved updated manuscript and filename
+            updated_manuscript = st.session_state.updated_manuscript
+            outbound_filename = st.session_state.outbound_filename
+
         # Provide download button
         st.download_button(
             label="Download Updated Manuscript",
