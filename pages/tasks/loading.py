@@ -5,9 +5,14 @@ from tasks.loading import (
     unload_container_by_name,
     visualize_loading,
 )
-from utils.grid_utils import create_ship_grid, plotly_visualize_grid
-from tasks.ship_balancer import Container
+from utils.grid_utils import create_ship_grid
+from utils.log_manager import LogFileManager  # Import LogFileManager
+from config.db_config import DBConfig  # For MongoDB connection
 
+# Initialize LogFileManager
+db_config = DBConfig()
+db = db_config.connect()
+log_manager = LogFileManager(db)
 
 def loading_task():
     st.title("Ship Loading and Unloading")
@@ -20,7 +25,8 @@ def loading_task():
     # Initialize the ship grid in session state
     if "ship_grid" not in st.session_state:
         st.session_state.ship_grid = create_ship_grid(rows, cols)
-    
+        log_manager.write_log("Initialized ship grid.")
+
     # Initialize messages in session state
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
@@ -50,9 +56,11 @@ def loading_task():
                     [row, col],
                 )
                 st.session_state["messages"].append(message)
+                log_manager.write_log(message)  # Log the loading action
                 st.success(message)
             else:
                 st.error("Please provide valid container details.")
+                log_manager.write_log("Invalid container details provided for loading.", "warning")
 
         # Display messages
         st.subheader("Action Messages")
@@ -72,12 +80,14 @@ def loading_task():
             if container_name:
                 message, location = unload_container_by_name(st.session_state.ship_grid, container_name)
                 st.session_state["messages"].append(message)
+                log_manager.write_log(message)  # Log the unloading action
                 if location:
                     st.success(message)
                 else:
                     st.error(message)
             else:
                 st.error("Please provide a valid container name.")
+                log_manager.write_log("Invalid container name provided for unloading.", "warning")
 
         # Display messages
         st.subheader("Action Messages")
