@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 from copy import deepcopy
+from utils.components.buttons import create_button, create_navigation_button
 from tasks.ship_balancer import (
     create_ship_grid,
     update_ship_grid,
@@ -746,6 +747,10 @@ def generate_stepwise_animation(initial_grid, steps, ship_grids):
     return fig
 def balancing_page():
     # Streamlit App
+    col1, _ = st.columns([2, 8])  # Center the button
+    with col1:
+        if create_navigation_button("Back to Operations", "operation", st.session_state):
+            st.rerun() 
     st.title("Ship Balancing Project")
     # Sidebar for grid setup
     st.sidebar.header("Ship Grid Setup")

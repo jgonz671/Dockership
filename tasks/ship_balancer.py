@@ -275,7 +275,6 @@ def load(containers_and_locs, ship_grid):
 
 
         steps.append(extra_steps)
-        # steps[idx].insert(0, "[8, 0] to [7, 0]")
         ship_grids.append(extra_grids)
 
     r, c = np.array(ship_grid).shape
