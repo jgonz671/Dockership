@@ -9,7 +9,7 @@ services:
       - MONGO_URI=${MONGO_URI}
       - MONGO_DBNAME=${MONGO_DBNAME}
     volumes:
-      - .:/app  # Mount your project directory
+      - .:/app
     networks:
       - dockership_network
 
