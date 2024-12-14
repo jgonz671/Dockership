@@ -34,7 +34,7 @@ def loading_task():
     container_names = [
         slot.container.name
         for row in st.session_state["ship_grid"]
-        for slot in row if slot.has_container
+        for slot in row if slot.hasContainer
     ]
     if container_names:
         st.write("### Available Containers")

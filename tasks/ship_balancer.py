@@ -24,16 +24,29 @@ class Slot:
 
 
 # Create a ship grid with size
+# def create_ship_grid(rows, columns):
+#     ship_grid = []
+
+#     for i in range(rows):
+#         container_row = []
+#         for i in range(columns):
+#             container_row.append(Slot(None, False, False))
+#         ship_grid.append(container_row)
+
+#     return ship_grid
+
 def create_ship_grid(rows, columns):
-    ship_grid = []
+    """
+    Creates an empty ship grid with the specified dimensions.
 
-    for i in range(rows):
-        container_row = []
-        for i in range(columns):
-            container_row.append(Slot(None, False, False))
-        ship_grid.append(container_row)
+    Args:
+        rows (int): Number of rows in the grid.
+        columns (int): Number of columns in the grid.
 
-    return ship_grid
+    Returns:
+        list: A 2D grid (list of lists) containing Slot objects.
+    """
+    return [[Slot(None, False, False) for _ in range(columns)] for _ in range(rows)]
 
 
 # Function to parse the manuscript
@@ -155,24 +168,55 @@ def visualize_ship_grid(ship_grid, title="Ship Grid"):
 
 
 # Update ship grid with manifest info, update list of containers accordingly
+# def update_ship_grid(lines, ship_grid, containers):
+#     for line in lines:
+#         slot_data = line.split()
+
+#         loc = [int(val) - 1 for val in re.sub(r"[\[\]]",'',slot_data[0]).split(",")[:2]]
+#         weight = int(re.sub(r"[\{\}\,]",'',slot_data[1]))
+#         status = slot_data[2] if len(slot_data) < 3 else " ".join(slot_data[2:])
+#         x,y = loc
+
+#         if status == "NAN":
+#             ship_grid[x][y] = Slot(None, hasContainer = False, available = False)
+#         elif status == "UNUSED":
+#             ship_grid[x][y] = Slot(None, hasContainer = False, available = True)
+#         else:
+#             ship_grid[x][y] = Slot(Container(status, weight), hasContainer = True, available = False)
+#             if len(ship_grid[x][y].container.name_adj) > 0:
+#                 ship_grid[x][y].container.name_check = True
+#             containers.append(loc)
+
 def update_ship_grid(lines, ship_grid, containers):
+    """
+    Updates the ship grid with manifest data from file lines.
+
+    Args:
+        lines (list): Lines from the manifest file.
+        ship_grid (list): The current ship grid.
+        containers (list): List to store container locations.
+
+    Returns:
+        None
+    """
     for line in lines:
         slot_data = line.split()
-
-        loc = [int(val) - 1 for val in re.sub(r"[\[\]]",'',slot_data[0]).split(",")[:2]]
-        weight = int(re.sub(r"[\{\}\,]",'',slot_data[1]))
-        status = slot_data[2] if len(slot_data) < 3 else " ".join(slot_data[2:])
-        x,y = loc
+        loc = [int(val) - 1 for val in re.sub(r"[\[\]]",
+                                              '', slot_data[0]).split(",")[:2]]
+        weight = int(re.sub(r"[\{\}\,]", '', slot_data[1]))
+        status = slot_data[2] if len(
+            slot_data) < 3 else " ".join(slot_data[2:])
+        x, y = loc
 
         if status == "NAN":
-            ship_grid[x][y] = Slot(None, hasContainer = False, available = False)
+            ship_grid[x][y] = Slot(None, hasContainer=False, available=False)
         elif status == "UNUSED":
-            ship_grid[x][y] = Slot(None, hasContainer = False, available = True)
+            ship_grid[x][y] = Slot(None, hasContainer=False, available=True)
         else:
-            ship_grid[x][y] = Slot(Container(status, weight), hasContainer = True, available = False)
-            if len(ship_grid[x][y].container.name_adj) > 0:
-                ship_grid[x][y].container.name_check = True
+            ship_grid[x][y] = Slot(
+                Container(status, weight), hasContainer=True, available=False)
             containers.append(loc)
+
 
 
 # Given ship grid, outputs matrix representing grid
@@ -925,4 +969,4 @@ if __name__=="__main__":
         ship_grids = reformat_grid_list(ship_grids, r, c)
         print_grid(ship_grids[-1])
 
-        print(steps)
+        print(steps)    
