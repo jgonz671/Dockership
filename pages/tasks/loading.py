@@ -1,117 +1,87 @@
 import streamlit as st
-from tasks.loading import (
-    load_containers_with_balancer,
-    unload_containers_with_balancer,
-    visualize_loading,
-)
+from tasks.ship_loader import load_containers, unload_containers
 from utils.grid_utils import create_ship_grid, plotly_visualize_grid
-from tasks.ship_balancer import Container
-
+from utils.components.buttons import create_navigation_button
 
 def initialize_session_state(rows, cols):
-    """
-    Initializes session state variables if not already present.
-    """
-    if not hasattr(st.session_state, "ship_grid"):
+    if "ship_grid" not in st.session_state:
         st.session_state.ship_grid = create_ship_grid(rows, cols)
-        st.session_state.containers = []
-        st.session_state.initial_plot = None
-        st.session_state.final_plot = None
-        st.session_state.steps = []
-        st.session_state.ship_grids = []  # Store grids for steps visualization
-    if not hasattr(st.session_state, "messages"):
+    if "messages" not in st.session_state:
         st.session_state.messages = []
-
+    if "total_cost" not in st.session_state:
+        st.session_state.total_cost = 0
 
 def loading_task():
-    st.title("Ship Loading and Unloading")
+    col1, _ = st.columns([2, 8])  # Center the button
+    with col1:
+        if create_navigation_button("Back to Operations", "operation", st.session_state):
+            st.rerun()
 
-    # Sidebar for grid setup
-    st.sidebar.header("Ship Grid Setup")
-    rows = 8
-    cols = 12
+    st.title("Ship Loading and Unloading System")
 
     # Initialize session state
+    rows, cols = 8, 12
     initialize_session_state(rows, cols)
 
     # Display current grid
     st.subheader("Current Ship Grid")
-    plotly_visualize_grid(
-        st.session_state.ship_grid, title="Ship Grid", key="current_grid"
-    )
+    plotly_visualize_grid(st.session_state.ship_grid, title="Ship Grid")
 
-    # Tab selection for Load/Unload functionality
-    tab = st.radio("Choose Action", [
-                   "Load Containers", "Unload Containers"], horizontal=True)
+    # Action selection
+    tab = st.radio("Choose Action", ["Load Containers", "Unload Containers"], horizontal=True)
 
     if tab == "Load Containers":
         st.subheader("Load Containers")
+        container_names_input = st.text_input(
+            "Container Names (comma-separated)",
+            placeholder="Enter container names (e.g., Alpha,Beta,Gamma)"
+        )
 
-        # Input for container details
-        container_name = st.text_input(
-            "Container Name", placeholder="Enter container name (e.g., 'Alpha')")
-        container_weight = st.number_input(
-            "Container Weight (kg)", min_value=1, step=1)
-        row = st.number_input("Target Row (1-based)",
-                              min_value=1, max_value=rows, step=1) - 1
-        col = st.number_input("Target Column (1-based)",
-                              min_value=1, max_value=cols, step=1) - 1
-
-        if st.button("Load Container"):
-            if container_name and container_weight > 0:
-                container = Container(container_name, container_weight)
-                containers_to_load = [(container, [row, col])]
-                steps, ship_grids, messages = load_containers_with_balancer(
-                    st.session_state.ship_grid, containers_to_load
-                )
-                st.session_state.ship_grid = ship_grids[-1]
+        if st.button("Load Containers"):
+            if container_names_input:
+                container_names = [name.strip() for name in container_names_input.split(",")]
+                messages, cost = load_containers(st.session_state.ship_grid, container_names)
                 st.session_state.messages.extend(messages)
-                st.success(
-                    f"Container '{container_name}' loaded successfully.")
+                st.session_state.total_cost += cost
+
+                for message in messages:
+                    if "Error" in message:
+                        st.error(message)
+                    else:
+                        st.success(message)
+
+                plotly_visualize_grid(st.session_state.ship_grid, title="Updated Ship Grid")
             else:
-                st.error("Please provide valid container details.")
-
-        # Display messages
-        st.subheader("Action Messages")
-        for msg in st.session_state.messages:
-            st.write(msg)
-
-        # Refresh grid visualization
-        visualize_loading(st.session_state.ship_grid,
-                          title="Ship Grid After Loading")
+                st.error("Please provide valid container names.")
 
     elif tab == "Unload Containers":
         st.subheader("Unload Containers")
+        container_names_input = st.text_input(
+            "Container Names to Unload (comma-separated)",
+            placeholder="Enter container names (e.g., Alpha,Beta,Gamma)"
+        )
 
-        # Input for container to unload
-        container_name = st.text_input(
-            "Container Name to Unload", placeholder="Enter container name (e.g., 'Alpha')")
-
-        if st.button("Unload Container"):
-            if container_name:
-                steps, ship_grids, messages = unload_containers_with_balancer(
-                    st.session_state.ship_grid, [container_name]
-                )
-                st.session_state.ship_grid = ship_grids[-1]
+        if st.button("Unload Containers"):
+            if container_names_input:
+                container_names = [name.strip() for name in container_names_input.split(",")]
+                messages, cost = unload_containers(st.session_state.ship_grid, container_names)
                 st.session_state.messages.extend(messages)
-                if f"Error: Container '{container_name}' not found on the grid." in messages:
-                    st.error(
-                        f"Container '{container_name}' not found on the grid.")
-                else:
-                    st.success(
-                        f"Container '{container_name}' unloaded successfully.")
+                st.session_state.total_cost += cost
+
+                for message in messages:
+                    if "Error" in message:
+                        st.error(message)
+                    else:
+                        st.success(message)
+
+                plotly_visualize_grid(st.session_state.ship_grid, title="Updated Ship Grid")
             else:
-                st.error("Please provide a valid container name.")
+                st.error("Please provide valid container names.")
 
-        # Display messages
-        st.subheader("Action Messages")
-        for msg in st.session_state.messages:
-            st.write(msg)
-
-        # Refresh grid visualization
-        visualize_loading(st.session_state.ship_grid,
-                          title="Ship Grid After Unloading")
-
-
-# if __name__ == "__main__":
-#     loading_task()
+    # Display total cost and action history
+    st.subheader("Operation Summary")
+    st.info(f"Total Operation Cost: {st.session_state.total_cost} seconds")
+    
+    st.subheader("Action History")
+    for msg in st.session_state.messages:
+        st.write(msg)
