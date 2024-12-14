@@ -20,6 +20,7 @@ from tasks.balancing_utils import (
     generate_animation_with_annotations,
     generate_stepwise_animation
 )
+
 def visualize_steps_with_overlay():
     """
     Visualize the base grid for the selected step and overlay it with sub-step movements.
