@@ -1,125 +1,120 @@
-from config.db_config import DBConfig
-from tasks.ship_balancer import Container, Slot, load, unload
-from utils.grid_utils import create_ship_grid, plotly_visualize_grid
-import copy
-
-db_config = DBConfig()
-db = db_config.connect()
-logs_collection = db_config.get_collection("logs")
+from tasks.ship_balancer import Container, Slot, manhattan_distance
 
 
-def load_containers_with_balancer(ship_grid, containers_and_locs):
+def find_next_available_position(ship_grid):
     """
-    Loads multiple containers onto the grid using the `load` function from `ship_balancer`.
+    Finds the next available position on the grid for loading, starting from the top-left.
+    Ensures no floating containers.
 
     Args:
-        ship_grid (list): 2D grid containing Slot objects.
-        containers_and_locs (list): List of tuples (Container, [row, col]) to load.
+        ship_grid (list): 2D grid of slots.
 
     Returns:
-        tuple: (steps, ship_grids, messages) detailing the loading process.
-    """
-    steps, ship_grids = load(containers_and_locs, ship_grid)
-
-    messages = []
-    for step_list in steps:
-        for step in step_list:
-            messages.append(f"Loading step: {step}")
-
-    return steps, ship_grids, messages
-
-
-def unload_containers_with_balancer(ship_grid, container_names):
-    """
-    Unloads multiple containers from the grid using the `unload` function from `ship_balancer`.
-
-    Args:
-        ship_grid (list): 2D grid containing Slot objects.
-        container_names (list): List of container names to unload.
-
-    Returns:
-        tuple: (steps, ship_grids, messages) detailing the unloading process.
-    """
-    container_locations = [
-        find_container_location(ship_grid, name)
-        for name in container_names if find_container_location(ship_grid, name) is not None
-    ]
-
-    steps, ship_grids = unload(container_locations, ship_grid)
-
-    messages = []
-    for step_list in steps:
-        for step in step_list:
-            messages.append(f"Unloading step: {step}")
-
-    for name in container_names:
-        if not find_container_location(ship_grid, name):
-            messages.append(
-                f"Error: Container '{name}' not found on the grid.")
-
-    return steps, ship_grids, messages
-
-
-def visualize_loading(ship_grid, title="Ship Loading Process"):
-    """
-    Visualizes the current state of the grid using Plotly.
-
-    Args:
-        ship_grid (list): 2D grid containing Slot objects.
-        title (str): Title of the visualization.
-
-    Returns:
-        None
-    """
-    plotly_visualize_grid(ship_grid, title)
-
-
-def find_container_location(ship_grid, container_name):
-    """
-    Finds the location of a container on the grid by its name.
-
-    Args:
-        ship_grid (list): 2D grid containing Slot objects.
-        container_name (str): Name of the container to find.
-
-    Returns:
-        list: Location [row, col] of the container if found, or None.
+        tuple: (row, col) of the next available position or (-1, -1) if no slots are available.
     """
     for row_idx, row in enumerate(ship_grid):
         for col_idx, slot in enumerate(row):
-            if slot.hasContainer and slot.container.name == container_name:
-                return [row_idx, col_idx]
-    return None
+            if slot.available:
+                # Check if the position is supported (row == 0 or a container is below)
+                if row_idx == 0 or ship_grid[row_idx - 1][col_idx].hasContainer:
+                    return row_idx, col_idx
+    return -1, -1  # No available slots
 
 
-if __name__ == "__main__":
-    # Example usage
-    rows, cols = 8, 12
-    ship_grid = create_ship_grid(rows, cols)
+def find_nearest_container(ship_grid, origin=(0, 0)):
+    """
+    Finds the nearest container to the given origin for unloading.
+    Ensures there are no containers above the target.
 
-    # Example: Loading containers
-    print("Loading containers...")
-    containers_to_load = [
-        (Container("Alpha", 1000), [0, 0]),
-        (Container("Beta", 1500), [1, 1]),
-    ]
-    load_steps, load_grids, load_messages = load_containers_with_balancer(
-        ship_grid, containers_to_load
-    )
-    for message in load_messages:
-        print(message)
+    Args:
+        ship_grid (list): 2D grid of slots.
+        origin (tuple): (row, col) from where to search for the nearest container.
 
-    # Visualize grid after loading
-    visualize_loading(load_grids[-1], title="After Loading Containers")
+    Returns:
+        tuple: (row, col) of the nearest container or (-1, -1) if no containers are found.
+    """
+    min_distance = float("inf")
+    nearest_position = (-1, -1)
 
-    # Example: Unloading containers
-    print("Unloading containers...")
-    containers_to_unload = ["Alpha", "Gamma"]
-    unload_steps, unload_grids, unload_messages = unload_containers_with_balancer(
-        ship_grid, containers_to_unload
-    )
-    for message in unload_messages:
-        print(message)
+    for row_idx, row in enumerate(ship_grid):
+        for col_idx, slot in enumerate(row):
+            if slot.hasContainer:
+                # Check if no container is above this one
+                if row_idx < len(ship_grid) - 1 and ship_grid[row_idx + 1][col_idx].hasContainer:
+                    continue  # Skip this slot because it has a container above
 
-    # Visualize grid after unloading
-    visualize_loading(unload_grids[-1], title="After Unloading Containers")
+                distance = manhattan_distance(origin, (row_idx, col_idx))
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_position = (row_idx, col_idx)
+
+    return nearest_position
+
+
+def load_containers(ship_grid, container_names):
+    """
+    Loads multiple containers onto the grid in the first available positions.
+    Ensures no floating containers.
+
+    Args:
+        ship_grid (list): 2D grid of slots.
+        container_names (list): List of container names to be loaded.
+
+    Returns:
+        list: Messages indicating the result of each load operation.
+    """
+    messages = []
+    default_weight = 100  # Assign a default weight
+
+    for container_name in container_names:
+        target_position = find_next_available_position(ship_grid)
+
+        if target_position == (-1, -1):
+            messages.append(f"Error: No available slots for container '{container_name}'.")
+            continue
+
+        row, col = target_position
+
+        # Place the container at the target position with default weight
+        ship_grid[row][col] = Slot(
+            container=Container(name=container_name, weight=default_weight),
+            hasContainer=True,
+            available=False,
+        )
+        messages.append(f"Container '{container_name}' loaded at [{row + 1}, {col + 1}].")
+    return messages
+
+
+
+def unload_containers(ship_grid, container_names):
+    """
+    Unloads multiple containers by name from the grid, starting with the nearest to the origin.
+    Ensures there are no containers above the target.
+
+    Args:
+        ship_grid (list): 2D grid of slots.
+        container_names (list): List of container names to be unloaded.
+
+    Returns:
+        list: Messages indicating the result of each unload operation.
+    """
+    origin = (0, 0)
+    messages = []
+    for container_name in container_names:
+        nearest_position = find_nearest_container(ship_grid, origin)
+
+        if nearest_position == (-1, -1):
+            messages.append(f"Error: No containers found for unloading.")
+            break
+
+        row, col = nearest_position
+        container = ship_grid[row][col].container
+
+        if container.name != container_name:
+            messages.append(f"Error: Nearest container does not match name '{container_name}'.")
+            continue
+
+        # Remove the container from the grid
+        ship_grid[row][col] = Slot(container=None, hasContainer=False, available=True)
+        messages.append(f"Container '{container_name}' unloaded from [{row + 1}, {col + 1}].")
+    return messages
