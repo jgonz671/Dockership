@@ -1,6 +1,7 @@
 import streamlit as st
 from tasks.ship_loader import load_containers, unload_containers
 from utils.grid_utils import create_ship_grid, plotly_visualize_grid
+from utils.components.buttons import create_navigation_button
 
 def initialize_session_state(rows, cols):
     if "ship_grid" not in st.session_state:
@@ -11,6 +12,11 @@ def initialize_session_state(rows, cols):
         st.session_state.total_cost = 0
 
 def loading_task():
+    col1, _ = st.columns([2, 8])  # Center the button
+    with col1:
+        if create_navigation_button("Back to Operations", "operation", st.session_state):
+            st.rerun()
+
     st.title("Ship Loading and Unloading System")
 
     # Initialize session state
