@@ -20,7 +20,10 @@ def loading_task():
     # Initialize the ship grid in session state
     if "ship_grid" not in st.session_state:
         st.session_state.ship_grid = create_ship_grid(rows, cols)
-        st.session_state.messages = []
+    
+    # Initialize messages in session state
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
 
     # Display current grid
     st.subheader("Current Ship Grid")
@@ -46,14 +49,14 @@ def loading_task():
                     container_weight,
                     [row, col],
                 )
-                st.session_state.messages.append(message)
+                st.session_state["messages"].append(message)
                 st.success(message)
             else:
                 st.error("Please provide valid container details.")
 
         # Display messages
         st.subheader("Action Messages")
-        for msg in st.session_state.messages:
+        for msg in st.session_state["messages"]:
             st.write(msg)
 
         # Refresh grid visualization
@@ -68,7 +71,7 @@ def loading_task():
         if st.button("Unload Container"):
             if container_name:
                 message, location = unload_container_by_name(st.session_state.ship_grid, container_name)
-                st.session_state.messages.append(message)
+                st.session_state["messages"].append(message)
                 if location:
                     st.success(message)
                 else:
@@ -78,7 +81,7 @@ def loading_task():
 
         # Display messages
         st.subheader("Action Messages")
-        for msg in st.session_state.messages:
+        for msg in st.session_state["messages"]:
             st.write(msg)
 
         # Refresh grid visualization
