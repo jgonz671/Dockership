@@ -1,7 +1,7 @@
 from tasks.ship_balancer import Container, Slot, manhattan_distance
-from utils.log_manager import LogFileManager  # Import LogFileManager
+# from utils.log_manager import LogFileManager  # Import LogFileManager
 import copy
-log_manager = LogFileManager(db)
+# log_manager = LogFileManager(db)
 
 def find_next_available_position(ship_grid):
     """
