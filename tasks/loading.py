@@ -1,6 +1,5 @@
-from utils.logging import log_user_action
 from config.db_config import DBConfig
-from tasks.ship_balancer import Container, Slot
+from tasks.ship_balancer import Container, Slot, load, unload
 from utils.grid_utils import create_ship_grid, plotly_visualize_grid
 import copy
 
@@ -8,88 +7,57 @@ db_config = DBConfig()
 db = db_config.connect()
 logs_collection = db_config.get_collection("logs")
 
-def load_container_by_name(ship_grid, container_name, container_weight, target_location):
+
+def load_containers_with_balancer(ship_grid, containers_and_locs):
     """
-    Loads a container onto the grid at the specified location.
-
-    Args:
-        ship_grid (list): 2D grid containing Slot objects.
-        container_name (str): Name of the container to be loaded.
-        container_weight (int): Weight of the container to be loaded.
-        target_location (list): [row, col] location for the container (0-based indexing).
-
-    Returns:
-        str: Success or error message.
-    """
-    row, col = target_location
-    if ship_grid[row][col].hasContainer:
-        return f"Error: Target location [{row + 1}, {col + 1}] is already occupied."
-
-    if not ship_grid[row][col].available:
-        return f"Error: Target location [{row + 1}, {col + 1}] is not available for loading."
-
-    # Place container at the target location
-    ship_grid[row][col] = Slot(
-        container=Container(container_name, container_weight),
-        hasContainer=True,
-        available=False,
-    )
-    return f"Container '{container_name}' loaded at location [{row + 1}, {col + 1}]."
-
-
-def unload_container_by_name(ship_grid, container_name):
-    """
-    Unloads a container from the grid based on its name.
-
-    Args:
-        ship_grid (list): 2D grid containing Slot objects.
-        container_name (str): Name of the container to be unloaded.
-
-    Returns:
-        tuple: Success or error message, and the container's location if found.
-    """
-    for row_idx, row in enumerate(ship_grid):
-        for col_idx, slot in enumerate(row):
-            if slot.hasContainer and slot.container.name == container_name:
-                # Clear the container slot
-                ship_grid[row_idx][col_idx] = Slot(container=None, hasContainer=False, available=True)
-                return f"Container '{container_name}' unloaded from location [{row_idx + 1}, {col_idx + 1}].", [row_idx, col_idx]
-    return f"Error: Container '{container_name}' not found on the grid.", None
-
-
-def load_containers(ship_grid, containers_and_locs):
-    """
-    Loads multiple containers onto the grid.
+    Loads multiple containers onto the grid using the `load` function from `ship_balancer`.
 
     Args:
         ship_grid (list): 2D grid containing Slot objects.
         containers_and_locs (list): List of tuples (Container, [row, col]) to load.
 
     Returns:
-        list: Messages detailing success or failure for each container.
+        tuple: (steps, ship_grids, messages) detailing the loading process.
     """
+    steps, ship_grids = load(containers_and_locs, ship_grid)
+
     messages = []
-    for container, location in containers_and_locs:
-        messages.append(load_container_by_name(ship_grid, container.name, container.weight, location))
-    return messages
+    for step_list in steps:
+        for step in step_list:
+            messages.append(f"Loading step: {step}")
+
+    return steps, ship_grids, messages
 
 
-def unload_containers(ship_grid, container_names):
+def unload_containers_with_balancer(ship_grid, container_names):
     """
-    Unloads multiple containers from the grid based on their names.
+    Unloads multiple containers from the grid using the `unload` function from `ship_balancer`.
 
     Args:
         ship_grid (list): 2D grid containing Slot objects.
         container_names (list): List of container names to unload.
 
     Returns:
-        list: Messages detailing success or failure for each container.
+        tuple: (steps, ship_grids, messages) detailing the unloading process.
     """
+    container_locations = [
+        find_container_location(ship_grid, name)
+        for name in container_names if find_container_location(ship_grid, name) is not None
+    ]
+
+    steps, ship_grids = unload(container_locations, ship_grid)
+
     messages = []
+    for step_list in steps:
+        for step in step_list:
+            messages.append(f"Unloading step: {step}")
+
     for name in container_names:
-        message, _ = unload_container_by_name(ship_grid, name)
-        messages.append(message)
-    return messages
+        if not find_container_location(ship_grid, name):
+            messages.append(
+                f"Error: Container '{name}' not found on the grid.")
+
+    return steps, ship_grids, messages
 
 
 def visualize_loading(ship_grid, title="Ship Loading Process"):
@@ -131,24 +99,27 @@ if __name__ == "__main__":
 
     # Example: Loading containers
     print("Loading containers...")
-    load_results = load_containers(
-        ship_grid,
-        [
-            (Container("Alpha", 1000), [0, 0]),
-            (Container("Beta", 1500), [1, 1]),
-        ]
+    containers_to_load = [
+        (Container("Alpha", 1000), [0, 0]),
+        (Container("Beta", 1500), [1, 1]),
+    ]
+    load_steps, load_grids, load_messages = load_containers_with_balancer(
+        ship_grid, containers_to_load
     )
-    for result in load_results:
-        print(result)
+    for message in load_messages:
+        print(message)
 
     # Visualize grid after loading
-    visualize_loading(ship_grid, title="After Loading Containers")
+    visualize_loading(load_grids[-1], title="After Loading Containers")
 
     # Example: Unloading containers
     print("Unloading containers...")
-    unload_results = unload_containers(ship_grid, ["Alpha", "Gamma"])
-    for result in unload_results:
-        print(result)
+    containers_to_unload = ["Alpha", "Gamma"]
+    unload_steps, unload_grids, unload_messages = unload_containers_with_balancer(
+        ship_grid, containers_to_unload
+    )
+    for message in unload_messages:
+        print(message)
 
     # Visualize grid after unloading
-    visualize_loading(ship_grid, title="After Unloading Containers")
+    visualize_loading(unload_grids[-1], title="After Unloading Containers")

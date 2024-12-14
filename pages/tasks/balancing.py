@@ -759,8 +759,8 @@ def balancing_page():
     if "steps" not in st.session_state:
         st.session_state["steps"] = []
         
-    if "ship_grids" not in st.session_state:  # Ensure ship_grids is initialized
-        st.session_state["ship_grids"] = []
+    # if "ship_grids" not in st.session_state:  # Ensure ship_grids is initialized
+    #     st.session_state["ship_grids"] = []
     if "final_plot" not in st.session_state:
         st.session_state.final_plot = None
         
