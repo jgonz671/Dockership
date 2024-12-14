@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import plotly.graph_objects as go
 from copy import deepcopy
@@ -10,6 +11,7 @@ from tasks.ship_balancer import (
     calculate_balance,
     balance,
 )
+
 
 def plotly_visualize_grid(grid, title="Ship Grid"):
     """
@@ -90,7 +92,8 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
                 y0=i - 0.5,
                 x1=cols - 0.5,
                 y1=i - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),  # Lighter gridlines
+                line=dict(color="rgba(0, 0, 0, 0.2)",
+                          width=1),  # Lighter gridlines
             )
         )
     for j in range(cols + 1):  # Vertical lines
@@ -101,7 +104,8 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
                 y0=-0.5,
                 x1=j - 0.5,
                 y1=rows - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),  # Lighter gridlines
+                line=dict(color="rgba(0, 0, 0, 0.2)",
+                          width=1),  # Lighter gridlines
             )
         )
     # Add a border around the entire grid with lighter color and reduced width
@@ -121,7 +125,7 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
             z=z,
             colorscale=[
                 [0, "white"],       # Empty slots
-                [0.5, "lightgray"], # NAN slots
+                [0.5, "lightgray"],  # NAN slots
                 [1, "blue"],        # Occupied slots
             ],
             hoverinfo="text",
@@ -153,6 +157,8 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
         plot_bgcolor="black",  # Ensure the background is white for contrast
     )
     return fig
+
+
 def convert_grid_to_manuscript(ship_grid):
     """
     Converts the updated grid back to manuscript format.
@@ -164,13 +170,17 @@ def convert_grid_to_manuscript(ship_grid):
     manuscript_lines = []
     for row_idx, row in enumerate(ship_grid):
         for col_idx, slot in enumerate(row):
-            coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
-            weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
-            status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
+            # Row, Column coordinates
+            coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"
+            # Weight with 5 digits
+            weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"
+            status_or_name = slot.container.name if slot.container else (
+                "NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
             line = f"{coordinates}, {weight}, {status_or_name}"
             manuscript_lines.append(line)
     return "\n".join(manuscript_lines)
-import os
+
+
 def append_outbound_to_filename(filename):
     """
     Appends 'OUTBOUND' to the filename before the extension.
@@ -182,11 +192,12 @@ def append_outbound_to_filename(filename):
     name, ext = os.path.splitext(filename)
     return f"{name}_OUTBOUND{ext}"
 
+
 def plotly_visualize_grid_dynamic(grid, title="Ship Grid", highlight=None):
     """
     Visualizes the ship's container grid layout using Plotly with proper text placement inside the blocks.
     Includes lighter gridlines and highlights the specific container being moved.
-    
+
     Args:
         grid (list): The ship grid to visualize.
         title (str): Title of the grid visualization.
@@ -267,7 +278,8 @@ def plotly_visualize_grid_dynamic(grid, title="Ship Grid", highlight=None):
                 y0=i - 0.5,
                 x1=cols - 0.5,
                 y1=i - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),  # Lighter gridlines
+                line=dict(color="rgba(0, 0, 0, 0.2)",
+                          width=1),  # Lighter gridlines
             )
         )
     for j in range(cols + 1):  # Vertical lines
@@ -278,7 +290,8 @@ def plotly_visualize_grid_dynamic(grid, title="Ship Grid", highlight=None):
                 y0=-0.5,
                 x1=j - 0.5,
                 y1=rows - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),  # Lighter gridlines
+                line=dict(color="rgba(0, 0, 0, 0.2)",
+                          width=1),  # Lighter gridlines
             )
         )
     # Highlight the specific container's movement
@@ -321,7 +334,7 @@ def plotly_visualize_grid_dynamic(grid, title="Ship Grid", highlight=None):
             z=z,
             colorscale=[
                 [0, "white"],       # Empty slots
-                [0.5, "lightgray"], # NAN slots
+                [0.5, "lightgray"],  # NAN slots
                 [1, "blue"],        # Occupied slots
             ],
             hoverinfo="text",
@@ -353,6 +366,8 @@ def plotly_visualize_grid_dynamic(grid, title="Ship Grid", highlight=None):
         plot_bgcolor="black",  # Ensure the background is white for contrast
     )
     return fig
+
+
 def visualize_steps_with_overlay():
     """
     Visualize the base grid for the selected step and overlay it with sub-step movements.
@@ -362,19 +377,21 @@ def visualize_steps_with_overlay():
         # Ensure the initial grid is set once
         if "initial_grid" not in st.session_state:
             # Make a deep copy of the initial grid to ensure it's not inadvertently modified
-            st.session_state.initial_grid = [row[:] for row in st.session_state.ship_grid]
+            st.session_state.initial_grid = [row[:]
+                                             for row in st.session_state.ship_grid]
         # Select Step
         total_steps = len(st.session_state.steps)
-        step_number = st.number_input("Select Step", min_value=1, max_value=total_steps, value=1, step=1) - 1
+        step_number = st.number_input(
+            "Select Step", min_value=1, max_value=total_steps, value=1, step=1) - 1
         # Base grid for the selected step
         base_grid = (
             st.session_state.initial_grid
             if step_number == 0
             else st.session_state.ship_grids[step_number - 1]
         )
-        #base_grid_plot = plotly_visualize_grid(base_grid, title=f"Base Grid for Step {step_number + 1}")
+        # base_grid_plot = plotly_visualize_grid(base_grid, title=f"Base Grid for Step {step_number + 1}")
         # Display base grid
-        #st.plotly_chart(base_grid_plot, use_container_width=True)
+        # st.plotly_chart(base_grid_plot, use_container_width=True)
         # Select Sub-Step
         selected_step = st.session_state.steps[step_number]
         total_sub_steps = len(selected_step)
@@ -383,18 +400,22 @@ def visualize_steps_with_overlay():
         ) - 1
         # Get current sub-step details
         current_sub_step = selected_step[sub_step_number]
-        from_coords, to_coords = current_sub_step.replace("[", "").replace("]", "").split(" to ")
+        from_coords, to_coords = current_sub_step.replace(
+            "[", "").replace("]", "").split(" to ")
         from_x, from_y = map(int, from_coords.split(","))
         to_x, to_y = map(int, to_coords.split(","))
         # Overlay the sub-step movement on the base grid
         overlay_plot = plotly_visualize_grid_with_overlay(
-            base_grid, (from_x, from_y), (to_x, to_y), title="Step with Sub-Step Movement Overlay"
+            base_grid, (from_x, from_y), (to_x,
+                                          to_y), title="Step with Sub-Step Movement Overlay"
         )
         st.plotly_chart(overlay_plot, use_container_width=True)
+
+
 def plotly_visualize_grid_with_overlay(grid, from_coords, to_coords, title="Ship Grid"):
     """
     Visualizes the ship's container grid layout with an overlay for sub-step movements.
-    
+
     Args:
         grid (list): The base grid to visualize.
         from_coords (tuple): Coordinates of the source (red highlight).
@@ -469,7 +490,8 @@ def plotly_visualize_grid_with_overlay(grid, from_coords, to_coords, title="Ship
                 y0=i - 0.5,
                 x1=cols - 0.5,
                 y1=i - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),  # Semi-transparent gridlines
+                # Semi-transparent gridlines
+                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),
             )
         )
     for j in range(cols + 1):  # Vertical lines
@@ -480,7 +502,8 @@ def plotly_visualize_grid_with_overlay(grid, from_coords, to_coords, title="Ship
                 y0=-0.5,
                 x1=j - 0.5,
                 y1=rows - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),  # Semi-transparent gridlines
+                # Semi-transparent gridlines
+                line=dict(color="rgba(0, 0, 0, 0.2)", width=1),
             )
         )
     # Create the heatmap with normalized colorscale values
@@ -489,7 +512,7 @@ def plotly_visualize_grid_with_overlay(grid, from_coords, to_coords, title="Ship
             z=z,
             colorscale=[
                 [0, "white"],        # Empty slots
-                [0.25, "lightgray"], # NAN slots
+                [0.25, "lightgray"],  # NAN slots
                 [0.5, "blue"],       # Occupied slots
                 [0.75, "red"],       # Source (highlight)
                 [1, "green"],        # Destination (highlight)
@@ -515,6 +538,8 @@ def plotly_visualize_grid_with_overlay(grid, from_coords, to_coords, title="Ship
         plot_bgcolor="white",
     )
     return fig
+
+
 def generate_animation_with_annotations():
     """
     Generates a single Plotly animation for the balancing steps with annotations for each sub-step.
@@ -538,7 +563,8 @@ def generate_animation_with_annotations():
                     y0=i - 0.5,
                     x1=cols - 0.5,
                     y1=i - 0.5,
-                    line=dict(color="rgba(0, 0, 0, 0.5)", width=1),  # Semi-transparent black lines
+                    # Semi-transparent black lines
+                    line=dict(color="rgba(0, 0, 0, 0.5)", width=1),
                 )
             )
         for j in range(cols + 1):  # Vertical gridlines
@@ -549,7 +575,8 @@ def generate_animation_with_annotations():
                     y0=-0.5,
                     x1=j - 0.5,
                     y1=rows - 0.5,
-                    line=dict(color="rgba(0, 0, 0, 0.5)", width=1),  # Semi-transparent black lines
+                    # Semi-transparent black lines
+                    line=dict(color="rgba(0, 0, 0, 0.5)", width=1),
                 )
             )
         # Iterate through steps and sub-steps
@@ -561,7 +588,8 @@ def generate_animation_with_annotations():
             )
             for sub_step in step:
                 # Parse coordinates
-                from_coords, to_coords = sub_step.replace("[", "").replace("]", "").split(" to ")
+                from_coords, to_coords = sub_step.replace(
+                    "[", "").replace("]", "").split(" to ")
                 from_x, from_y = map(int, from_coords.split(","))
                 to_x, to_y = map(int, to_coords.split(","))
                 # Prepare z values and annotations for this frame
@@ -634,7 +662,8 @@ def generate_animation_with_annotations():
                             ],
                             showscale=False,
                         )],
-                        layout=go.Layout(annotations=annotations_frame, shapes=gridline_shapes),
+                        layout=go.Layout(
+                            annotations=annotations_frame, shapes=gridline_shapes),
                     )
                 )
         # Add initial frame to the figure
@@ -652,12 +681,14 @@ def generate_animation_with_annotations():
                         dict(
                             label="Play",
                             method="animate",
-                            args=[None, dict(frame=dict(duration=500, redraw=True), fromcurrent=True)],
+                            args=[None, dict(frame=dict(
+                                duration=500, redraw=True), fromcurrent=True)],
                         ),
                         dict(
                             label="Pause",
                             method="animate",
-                            args=[[None], dict(frame=dict(duration=0, redraw=False))],
+                            args=[[None], dict(frame=dict(
+                                duration=0, redraw=False))],
                         ),
                     ],
                 )
@@ -676,15 +707,17 @@ def generate_animation_with_annotations():
         )
         # Display the animation
         st.plotly_chart(fig, use_container_width=True)
+
+
 def generate_stepwise_animation(initial_grid, steps, ship_grids):
     """
     Generates an animation for the ship balancing steps, displaying each sub-step within each step sequentially.
-    
+
     Args:
         initial_grid (list): The initial grid of the ship.
         steps (list): List of steps with sub-steps.
         ship_grids (list): List of grids representing the ship state after each step.
-    
+
     Returns:
         Plotly figure with animation frames.
     """
@@ -693,7 +726,8 @@ def generate_stepwise_animation(initial_grid, steps, ship_grids):
     # Add a frame for each step and sub-step
     for step_idx, (step, step_grid) in enumerate(zip(steps, ship_grids)):
         for sub_step_idx, sub_step in enumerate(step):
-            from_coords, to_coords = sub_step.replace("[", "").replace("]", "").split(" to ")
+            from_coords, to_coords = sub_step.replace(
+                "[", "").replace("]", "").split(" to ")
             from_x, from_y = map(int, from_coords.split(","))
             to_x, to_y = map(int, to_coords.split(","))
             # Create the plot for this sub-step
@@ -745,12 +779,14 @@ def generate_stepwise_animation(initial_grid, steps, ship_grids):
         ]
     )
     return fig
+
+
 def balancing_page():
     # Streamlit App
     col1, _ = st.columns([2, 8])  # Center the button
     with col1:
         if create_navigation_button("Back to Operations", "operation", st.session_state):
-            st.rerun() 
+            st.rerun()
     st.title("Ship Balancing Project")
     # Sidebar for grid setup
     st.sidebar.header("Ship Grid Setup")
@@ -758,12 +794,12 @@ def balancing_page():
     columns = 12  # Fixed to match the manifest
     if "steps" not in st.session_state:
         st.session_state["steps"] = []
-        
+
     # if "ship_grids" not in st.session_state:  # Ensure ship_grids is initialized
     #     st.session_state["ship_grids"] = []
     if "final_plot" not in st.session_state:
         st.session_state.final_plot = None
-        
+
     # Initialize session state
     if "ship_grid" not in st.session_state:
         st.session_state.ship_grid = create_ship_grid(rows, columns)
@@ -777,7 +813,8 @@ def balancing_page():
         try:
             # Use file content from file_handler
             file_content = st.session_state["file_content"].splitlines()
-            update_ship_grid(file_content, st.session_state.ship_grid, st.session_state.containers)
+            update_ship_grid(
+                file_content, st.session_state.ship_grid, st.session_state.containers)
             st.session_state.initial_plot = plotly_visualize_grid(
                 st.session_state.ship_grid, title="Initial Ship Grid"
             )
@@ -785,23 +822,27 @@ def balancing_page():
         except Exception as e:
             st.error(f"Error processing the manuscript: {e}")
     else:
-        st.error("No manuscript available. Please upload a file in the File Handler page.")
+        st.error(
+            "No manuscript available. Please upload a file in the File Handler page.")
     # Display initial grid
     if st.session_state.initial_plot:
         st.subheader("Initial Ship Grid")
         st.plotly_chart(st.session_state.initial_plot)
-    
+
     # Perform balancing
     if st.button("Balance Ship"):
         # Save the initial grid only once to preserve its state
         if "initial_grid" not in st.session_state:
-            st.session_state["initial_grid"] = [row.copy() for row in st.session_state.ship_grid]
+            st.session_state["initial_grid"] = [row.copy()
+                                                for row in st.session_state.ship_grid]
         # Calculate balance and perform balancing
-        left_balance, right_balance, balanced = calculate_balance(st.session_state.ship_grid)
+        left_balance, right_balance, balanced = calculate_balance(
+            st.session_state.ship_grid)
         if balanced:
             st.success("The ship is already balanced!")
         else:
-            steps, ship_grids, status = balance(st.session_state.ship_grid, st.session_state.containers)
+            steps, ship_grids, status = balance(
+                st.session_state.ship_grid, st.session_state.containers)
             st.session_state.steps = steps
             st.session_state.ship_grids = ship_grids  # Store intermediate grids
             st.session_state.ship_grid = ship_grids[-1]
@@ -811,7 +852,8 @@ def balancing_page():
             if status:
                 st.success("Ship balanced successfully!")
             else:
-                st.warning("Ship could not be perfectly balanced. Check balancing steps.")
+                st.warning(
+                    "Ship could not be perfectly balanced. Check balancing steps.")
     # Tabs for navigation
     selected_tab = st.radio(
         "Choose a tab",
@@ -826,8 +868,10 @@ def balancing_page():
                 st.markdown(f"**Step {step_number + 1}:**")
                 for sub_step_number, sub_step in enumerate(step_list):
                     # Parse and increment the coordinates
-                    original_step = sub_step.replace("[", "").replace("]", "")  # Remove brackets for processing
-                    from_coords, to_coords = original_step.split(" to ")   # Split into 'from' and 'to' parts
+                    original_step = sub_step.replace("[", "").replace(
+                        "]", "")  # Remove brackets for processing
+                    from_coords, to_coords = original_step.split(
+                        " to ")   # Split into 'from' and 'to' parts
                     from_x, from_y = map(int, from_coords.split(","))
                     to_x, to_y = map(int, to_coords.split(","))
                     # Increment the coordinates
@@ -839,19 +883,20 @@ def balancing_page():
                     incremented_step = f"[{from_x},{from_y}] to [{to_x},{to_y}]"
                     st.write(f"{sub_step_number + 1}. {incremented_step}")
     elif selected_tab == "Steps with Grids":
-        #visualize_steps_with_grids()
+        # visualize_steps_with_grids()
         visualize_steps_with_overlay()
-    
+
     elif selected_tab == "Block Movement Animation":
         # Animation for all steps
         generate_animation_with_annotations()
-    
+
     elif selected_tab == "Steps Summary":
         """
         Summarize movements and include plots for summarized steps.
         """
         if "steps" in st.session_state and "ship_grids" in st.session_state:
             st.subheader("Summarized Steps with Plots")
+
             def summarize_steps(steps):
                 """
                 Summarizes a list of steps by collapsing consecutive movements into a single range.
@@ -868,13 +913,17 @@ def balancing_page():
                     end_coords = None
                     for sub_step in step_list:
                         # Parse the coordinates
-                        from_coords, to_coords = sub_step.replace("[", "").replace("]", "").split(" to ")
+                        from_coords, to_coords = sub_step.replace(
+                            "[", "").replace("]", "").split(" to ")
                         from_x, from_y = map(int, from_coords.split(","))
                         to_x, to_y = map(int, to_coords.split(","))
                         if start_coords is None:
-                            start_coords = (from_x + 1, from_y + 1)  # Convert to 1-based index
-                        end_coords = (to_x + 1, to_y + 1)  # Update the latest destination
-                    summarized_steps.append(f"[{start_coords[0]},{start_coords[1]}] to [{end_coords[0]},{end_coords[1]}]")
+                            # Convert to 1-based index
+                            start_coords = (from_x + 1, from_y + 1)
+                        # Update the latest destination
+                        end_coords = (to_x + 1, to_y + 1)
+                    summarized_steps.append(
+                        f"[{start_coords[0]},{start_coords[1]}] to [{end_coords[0]},{end_coords[1]}]")
                 return summarized_steps
             # Summarize the steps
             summarized_steps = summarize_steps(st.session_state.steps)
@@ -883,8 +932,10 @@ def balancing_page():
                 st.markdown(f"### Step {step_number + 1}: {summary}")
                 # Extract start and end coordinates
                 start_coords, end_coords = summary.split(" to ")
-                start_x, start_y = map(int, start_coords.replace("[", "").replace("]", "").split(","))
-                end_x, end_y = map(int, end_coords.replace("[", "").replace("]", "").split(","))
+                start_x, start_y = map(int, start_coords.replace(
+                    "[", "").replace("]", "").split(","))
+                end_x, end_y = map(int, end_coords.replace(
+                    "[", "").replace("]", "").split(","))
                 # Get the base grid for this step
                 base_grid = (
                     st.session_state.ship_grids[step_number - 1]
@@ -892,14 +943,17 @@ def balancing_page():
                     else st.session_state.initial_grid
                 )
                 # Create a plot for this step
+
                 def plot_grid_with_summary(grid, start, end):
                     z = []
                     annotations = []
                     for row_idx, row in enumerate(grid):
                         z_row = []
                         for col_idx, slot in enumerate(row):
-                            if (row_idx, col_idx) == (start[0] - 1, start[1] - 1):  # Convert back to 0-based index
-                                z_row.append(2)  # Starting position (semi-transparent red)
+                            # Convert back to 0-based index
+                            if (row_idx, col_idx) == (start[0] - 1, start[1] - 1):
+                                # Starting position (semi-transparent red)
+                                z_row.append(2)
                                 if slot.container:
                                     annotations.append(
                                         dict(
@@ -914,7 +968,8 @@ def balancing_page():
                                             font=dict(size=12, color="white"),
                                         )
                                     )
-                            elif (row_idx, col_idx) == (end[0] - 1, end[1] - 1):  # Convert back to 0-based index
+                            # Convert back to 0-based index
+                            elif (row_idx, col_idx) == (end[0] - 1, end[1] - 1):
                                 z_row.append(3)  # Ending position (green)
                                 annotations.append(
                                     dict(
@@ -925,10 +980,10 @@ def balancing_page():
                                         yref="y",
                                         showarrow=False,
                                         xanchor="center",
-                                            yanchor="middle",
-                                            font=dict(size=12, color="white"),
-                                        )
+                                        yanchor="middle",
+                                        font=dict(size=12, color="white"),
                                     )
+                                )
                             elif slot.container:
                                 z_row.append(1)  # Occupied
                                 annotations.append(
@@ -953,10 +1008,14 @@ def balancing_page():
                         data=go.Heatmap(
                             z=z,
                             colorscale=[
-                                [0, "rgba(255, 255, 255, 1.0)"],  # Empty (White)
-                                [0.25, "rgba(211, 211, 211, 1.0)"],  # NAN (Light Gray)
-                                [0.5, "rgba(0, 0, 255, 1.0)"],  # Occupied (Blue)
-                                [0.75, "rgba(255, 0, 0, 0.5)"],  # Semi-Transparent Red for Start
+                                # Empty (White)
+                                [0, "rgba(255, 255, 255, 1.0)"],
+                                # NAN (Light Gray)
+                                [0.25, "rgba(211, 211, 211, 1.0)"],
+                                # Occupied (Blue)
+                                [0.5, "rgba(0, 0, 255, 1.0)"],
+                                # Semi-Transparent Red for Start
+                                [0.75, "rgba(255, 0, 0, 0.5)"],
                                 [1, "rgba(0, 255, 0, 1.0)"],  # Green for End
                             ],
                             showscale=False,
@@ -966,7 +1025,8 @@ def balancing_page():
                         annotations=annotations,
                         xaxis=dict(
                             tickvals=[i for i in range(len(grid[0]))],
-                            ticktext=[f"{i + 1:02}" for i in range(len(grid[0]))],
+                            ticktext=[
+                                f"{i + 1:02}" for i in range(len(grid[0]))],
                         ),
                         yaxis=dict(
                             tickvals=[i for i in range(len(grid))],
@@ -975,17 +1035,19 @@ def balancing_page():
                     )
                     return fig
                 # Plot for this summarized step
-                plot = plot_grid_with_summary(base_grid, (start_x, start_y), (end_x, end_y))
+                plot = plot_grid_with_summary(
+                    base_grid, (start_x, start_y), (end_x, end_y))
                 st.plotly_chart(plot, use_container_width=True)
 
-        
     # Display final grid after balancing
     if st.session_state.final_plot:
         st.subheader("Final Ship Grid After Balancing")
         st.plotly_chart(st.session_state.final_plot)
         # Generate updated manuscript
-        updated_manuscript = convert_grid_to_manuscript(st.session_state.ship_grid)
-        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manuscript.txt"))
+        updated_manuscript = convert_grid_to_manuscript(
+            st.session_state.ship_grid)
+        outbound_filename = append_outbound_to_filename(
+            st.session_state.get("file_name", "manuscript.txt"))
         # Provide download button
         st.download_button(
             label="Download Updated Manuscript",
