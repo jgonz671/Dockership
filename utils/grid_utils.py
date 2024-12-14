@@ -1,6 +1,6 @@
-# utils/grid_utils.py
 from tasks.ship_balancer import Slot, Container
 from utils.validators import validate_ship_grid
+import streamlit as st 
 import plotly.graph_objects as go
 
 
@@ -18,28 +18,23 @@ def create_ship_grid(rows, columns):
     return [[Slot(None, False, False) for _ in range(columns)] for _ in range(rows)]
 
 
-def plotly_visualize_grid(grid, title="Ship Grid"):
+def plotly_visualize_grid(grid, title="Ship Grid", key=None):
     """
-    Visualizes the ship's container grid layout using Plotly with proper text placement inside the blocks.
-    Includes lighter gridlines and a less intrusive border.
+    Visualizes the ship's container grid layout using Plotly.
 
     Args:
         grid (list of lists): 2D grid containing Slot objects.
-        title (str): Title of the grid visualization.
+        title (str): Title of the plot.
+        key (str): Unique key for the Streamlit chart element.
 
     Returns:
-        go.Figure: Plotly figure representing the ship grid layout.
+        None: Renders the Plotly chart in Streamlit.
     """
-    # Ensure grid is valid before proceeding
-    # validate_ship_grid(grid)
+    validate_ship_grid(grid)
 
     z = []  # Color mapping for grid cells
     hover_text = []  # Hover text for each cell
     annotations = []  # Annotations for text inside cells
-    shapes = []  # Manual gridline shapes
-
-    rows = len(grid)
-    cols = len(grid[0])
 
     for row_idx, row in enumerate(grid):
         z_row = []
@@ -102,45 +97,6 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
         z.append(z_row)
         hover_text.append(hover_row)
 
-    # Add manual gridlines as shapes
-    for i in range(rows + 1):  # Horizontal lines
-        shapes.append(
-            dict(
-                type="line",
-                x0=-0.5,
-                y0=i - 0.5,
-                x1=cols - 0.5,
-                y1=i - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)",
-                          width=1),  # Lighter gridlines
-            )
-        )
-    for j in range(cols + 1):  # Vertical lines
-        shapes.append(
-            dict(
-                type="line",
-                x0=j - 0.5,
-                y0=-0.5,
-                x1=j - 0.5,
-                y1=rows - 0.5,
-                line=dict(color="rgba(0, 0, 0, 0.2)",
-                          width=1),  # Lighter gridlines
-            )
-        )
-
-    # Add a border around the entire grid
-    shapes.append(
-        dict(
-            type="rect",
-            x0=-0.5,
-            y0=-0.5,
-            x1=cols - 0.5,
-            y1=rows - 0.5,
-            line=dict(color="rgba(0, 0, 0, 0.1)", width=0.1),  # Lighter border
-        )
-    )
-
-    # Create the heatmap
     fig = go.Figure(
         data=go.Heatmap(
             z=z,
@@ -154,29 +110,27 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
             showscale=False,
         )
     )
-
-    # Add annotations and shapes for gridlines
     fig.update_layout(
         title=dict(text=title, x=0.5),
         xaxis=dict(
             title="Columns",
-            showgrid=False,  # Disable default gridlines
+            showgrid=False,
             zeroline=False,
             tickmode="array",
-            tickvals=[i for i in range(cols)],
-            ticktext=[f"{i + 1:02}" for i in range(cols)],
+            tickvals=[i for i in range(len(grid[0]))],
+            ticktext=[f"{i + 1:02}" for i in range(len(grid[0]))],
         ),
         yaxis=dict(
             title="Rows",
-            showgrid=False,  # Disable default gridlines
+            showgrid=False,
             zeroline=False,
             tickmode="array",
-            tickvals=[i for i in range(rows)],
-            ticktext=[f"{i + 1:02}" for i in range(rows)],
+            tickvals=[i for i in range(len(grid))],
+            ticktext=[f"{i + 1:02}" for i in range(len(grid))],
         ),
-        shapes=shapes,
         annotations=annotations,
-        plot_bgcolor="white",  # Ensure the background is white for contrast
+        plot_bgcolor="white",
     )
 
-    return fig
+    # Render the Plotly chart in Streamlit with a unique key
+    st.plotly_chart(fig, use_container_width=True, key=key)
