@@ -3,6 +3,7 @@ import random
 import os
 from tasks.ship_balancer import Container, Slot, manhattan_distance
 
+
 def find_next_available_position(ship_grid):
     """Find next available bottom-most position."""
     cols = len(ship_grid[0])
@@ -16,14 +17,16 @@ def find_next_available_position(ship_grid):
     return -1, -1
 
 def find_blocking_containers(ship_grid, target_row, target_col):
-    """Find containers stacked above target."""
+    """Find containers stacked above target in top-to-bottom order."""
     blocking = []
-    for row in range(target_row + 1, len(ship_grid)):
+    max_row = len(ship_grid)
+    
+    # Scan top-down starting from highest possible position
+    for row in range(max_row - 1, target_row, -1):
         if ship_grid[row][target_col].hasContainer:
             blocking.append((row, target_col))
-        else:
-            break
-    return blocking
+            
+    return blocking  # Already in top-to-bottom order
 
 def find_lowest_available_position(ship_grid, col):
     """Find lowest available position in column."""
@@ -140,8 +143,8 @@ def move_blocking_container_low_capacity(ship_grid, block_row, block_col, contai
     cost = move_container(ship_grid, (block_row, block_col), (target_row, target_col), messages, first_move)
     return cost, (target_row, target_col)
 
-def load_containers(ship_grid, container_names, container_weights):
-    """Load containers efficiently, starting from leftmost columns."""
+def load_containers(ship_grid, container_names):
+    """Load containers from origin."""
     messages = []
     total_cost = 0
     origin = (len(ship_grid) - 1, 0)
@@ -156,10 +159,8 @@ def load_containers(ship_grid, container_names, container_weights):
         move_cost = calculate_move_cost(origin, target_pos, first_move)
         total_cost += move_cost
         first_move = False
-        # Get the weight from the provided weights
-        weight = container_weights.get(container_name, 0.0)
 
-        # Place the container with the specified weight
+        weight = random.randint(10000, 100000)
         row, col = target_pos
         ship_grid[row][col] = Slot(
             container=Container(name=container_name, weight=weight),
@@ -169,12 +170,11 @@ def load_containers(ship_grid, container_names, container_weights):
 
         messages.append(
             f"Container '{container_name}' loaded at [{row + 1}, {col + 1}] "
-            f"with weight {weight} kg. Move cost: {move_cost} seconds"
+            f"with weight {weight}. Move cost: {move_cost} seconds"
         )
 
-    # Calculate total operation cost
     messages.append(f"Total loading cost: {total_cost} seconds")
-    return messages, total_cost
+    return ship_grid, messages, total_cost
 
 def handle_origin_container(ship_grid, origin, container_names, current_capacity, messages, first_move):
     """Handle container at origin position based on grid capacity."""
@@ -226,18 +226,18 @@ def handle_origin_container(ship_grid, origin, container_names, current_capacity
     return total_cost, buffer, first_move, True, temp_position
 
 def unload_containers(ship_grid, container_names, buffer_capacity=5):
+    """Unload containers efficiently, handling duplicates by selecting optimal positions."""
     messages = []
     total_cost = 0
     origin = (len(ship_grid) - 1, 0)
     container_names = set(container_names)
     first_move = True
     buffer = []
-    container_positions = {}
     unloaded_containers = set()
 
     current_capacity = calculate_grid_capacity(ship_grid)
 
-    # Handle origin container
+    # Handle origin container first
     origin_cost, origin_buffer, first_move, success, temp_position = handle_origin_container(
         ship_grid, origin, container_names, current_capacity, messages, first_move
     )
@@ -246,24 +246,20 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
     total_cost += origin_cost
     buffer.extend(origin_buffer)
 
-    # Find and sort containers to unload
-    containers_to_unload = []
-    for row in range(len(ship_grid)-1, -1, -1):
-        for col in range(len(ship_grid[0])):
-            if (ship_grid[row][col].hasContainer and 
-                ship_grid[row][col].container.name in container_names):
-                containers_to_unload.append((row, col))
-                container_positions[ship_grid[row][col].container.name] = (row, col)
-
-    containers_to_unload.sort(key=lambda x: (-x[0], x[1]))
+    # Find all container positions including duplicates
+    container_positions = find_container_positions(ship_grid, container_names)
+    
+    # Get optimal positions for containers with duplicates
+    optimal_positions = get_optimal_container_positions(ship_grid, container_positions, origin)
+    
+    # Sort containers by position (top to bottom, left to right)
+    containers_to_unload = [(name, pos) for name, pos in optimal_positions.items()]
+    containers_to_unload.sort(key=lambda x: (-x[1][0], x[1][1]))
 
     # Process containers
-    for target_row, target_col in containers_to_unload:
-        target_container = ship_grid[target_row][target_col].container
-        if not target_container or target_container.name in unloaded_containers:
+    for container_name, current_pos in containers_to_unload:
+        if container_name in unloaded_containers:
             continue
-
-        current_pos = container_positions.get(target_container.name, (target_row, target_col))
 
         # Handle blocking containers
         blocking = find_blocking_containers(ship_grid, current_pos[0], current_pos[1])
@@ -273,6 +269,7 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
                 continue
 
             if current_capacity > 50.0 and len(buffer) < buffer_capacity:
+                # Move to buffer
                 buffer.append((blocking_container, block_col, None))
                 cost = calculate_move_cost((block_row, block_col), (-1, len(buffer) - 1), first_move)
                 messages.append(
@@ -280,6 +277,7 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
                 )
                 ship_grid[block_row][block_col] = Slot(container=None, hasContainer=False, available=True)
             else:
+                # Move to nearest available position
                 cost, new_pos = move_blocking_container_low_capacity(
                     ship_grid, block_row, block_col, container_names, messages, first_move
                 )
@@ -291,18 +289,16 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
             first_move = False
 
         # Unload target container
-        current_pos = container_positions[target_container.name]
+        container = ship_grid[current_pos[0]][current_pos[1]].container
         cost = move_container(ship_grid, current_pos, origin, messages, first_move)
         total_cost += cost
         first_move = False
         
-        unloaded_containers.add(target_container.name)
+        unloaded_containers.add(container_name)
         ship_grid[origin[0]][origin[1]] = Slot(container=None, hasContainer=False, available=True)
-        messages.append(f"Container '{target_container.name}' successfully unloaded from [{current_pos[0] + 1}, {current_pos[1] + 1}].")
-        
-        del container_positions[target_container.name]
+        messages.append(f"Container '{container_name}' successfully unloaded from [{current_pos[0] + 1}, {current_pos[1] + 1}].")
 
-    # Only restore buffer containers for high capacity case
+    # Restore buffer containers for high capacity case
     if current_capacity > 50.0:
         while buffer:
             container, original_col, _ = buffer.pop(0)
@@ -324,6 +320,68 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
 
     messages.append(f"Total unloading cost: {total_cost} seconds.")
     return ship_grid, messages, total_cost
+
+
+def convert_grid_to_manuscript(ship_grid):
+    """Convert grid to manuscript format."""
+    manuscript_lines = []
+    for row in ship_grid:
+        for slot in row:
+            if slot.hasContainer:
+                manuscript_lines.append(f"{slot.container.name},{slot.container.weight}")
+    return "\n".join(manuscript_lines)
+
+def append_outbound_to_filename(filename):
+    """Append OUTBOUND to filename."""
+    name, ext = os.path.splitext(filename)
+    return f"{name}_OUTBOUND{ext}"
+
+def find_container_positions(ship_grid, container_names):
+    """Find all positions of containers, including duplicates."""
+    container_positions = {}
+    
+    for row in range(len(ship_grid)-1, -1, -1):
+        for col in range(len(ship_grid[0])):
+            if ship_grid[row][col].hasContainer:
+                name = ship_grid[row][col].container.name
+                if name in container_names:
+                    if name not in container_positions:
+                        container_positions[name] = []
+                    container_positions[name].append((row, col))
+                    
+    return container_positions
+
+def estimate_unload_cost(ship_grid, container_pos, origin):
+    """Estimate total cost to unload container including moving blocking containers."""
+    row, col = container_pos
+    total_cost = calculate_move_cost(container_pos, origin, True)
+    
+    # Add cost of moving blocking containers
+    blocking = find_blocking_containers(ship_grid, row, col)
+    for block_pos in blocking:
+        # Estimate cost to nearest available column
+        target_col = find_nearest_available_column(ship_grid, block_pos[1])
+        if target_col != -1:
+            target_row = find_lowest_available_position(ship_grid, target_col)
+            if target_row != -1:
+                total_cost += calculate_move_cost(block_pos, (target_row, target_col), False)
+                
+    return total_cost
+
+def get_optimal_container_positions(ship_grid, container_positions, origin):
+    """For containers with duplicates, select position with lowest unload cost."""
+    optimal_positions = {}
+    
+    for name, positions in container_positions.items():
+        if len(positions) > 1:
+            # Find position with lowest total unload cost
+            costs = [(pos, estimate_unload_cost(ship_grid, pos, origin)) for pos in positions]
+            optimal_pos = min(costs, key=lambda x: x[1])[0]
+            optimal_positions[name] = optimal_pos
+        else:
+            optimal_positions[name] = positions[0]
+            
+    return optimal_positions
 
 
 # def unload_containers(ship_grid, container_names, buffer_capacity=5): 
@@ -445,19 +503,3 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
 #     messages.append(f"Total unloading cost: {total_cost} seconds.")
 #     return ship_grid, messages, total_cost
 
-def convert_grid_to_manifest(ship_grid):
-    """Convert grid to manifest format."""
-    manifest_lines = []
-    for row_idx, row in enumerate(ship_grid):
-        for col_idx, slot in enumerate(row):
-            coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
-            weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
-            status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
-            line = f"{coordinates}, {weight}, {status_or_name}"
-            manifest_lines.append(line)
-    return "\n".join(manifest_lines)
-
-def append_outbound_to_filename(filename):
-    """Append OUTBOUND to filename."""
-    name, ext = os.path.splitext(filename)
-    return f"{name}_OUTBOUND{ext}"
