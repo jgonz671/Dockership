@@ -13,8 +13,6 @@ def initialize_session_state(rows, cols):
     if "total_cost" not in st.session_state:
         st.session_state.total_cost = 0
 
-      
-
 
 def loading_task():
     col1, _ = st.columns([2, 8])  # Center the button
