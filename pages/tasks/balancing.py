@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from copy import deepcopy
 from utils.components.buttons import create_navigation_button
-
+from utils.logging import log_action
 from tasks.ship_balancer import (
     create_ship_grid,
     update_ship_grid,
@@ -21,7 +21,7 @@ from tasks.balancing_utils import (
     generate_animation_with_annotations,
     generate_stepwise_animation
 )
-from utils.components.buttons import create_navigation_button
+from utils.components.buttons import create_navigation_button, create_text_input_with_logging
 
 
 def visualize_steps_with_overlay():
@@ -101,6 +101,7 @@ def balancing_page():
             st.rerun()
     # Streamlit App
     st.title("Ship Balancing System")
+    username = st.session_state.get("username", "User")
     rows = 8  # Fixed to match the manifest
     columns = 12  # Fixed to match the manifest
 
@@ -410,24 +411,28 @@ def balancing_page():
         with col3:
             st.metric(label="➡️ Right Balance", value=f"{right_balance_final}")
 
-        # Check if updated manifest is already stored in session state
-        if "updated_manifest" not in st.session_state:
-            # Generate and save the updated manifest
+    with col1:
+        if st.button("Update Manifest"):
             updated_manifest = convert_grid_to_manifest(
                 st.session_state.ship_grid)
             outbound_filename = append_outbound_to_filename(
-                st.session_state.get("file_name", "manifest.txt"))
+                st.session_state.get("file_name", "manifest.txt")
+            )
             st.session_state.updated_manifest = updated_manifest
             st.session_state.outbound_filename = outbound_filename
-        else:
-            # Retrieve the saved updated manifest and filename
-            updated_manifest = st.session_state.updated_manifest
-            outbound_filename = st.session_state.outbound_filename
+            st.success("Manifest updated successfully!")
+            log_action(username=username, action="UPDATE_MANIFEST",
+                       notes=f"{username} updated the manifest {outbound_filename}.")
 
-        # Provide download button
+    with col2:
         st.download_button(
             label="Download Updated Manifest",
-            data=updated_manifest,
-            file_name=outbound_filename,
+            data=st.session_state.updated_manifest,
+            file_name=st.session_state.outbound_filename,
             mime="text/plain",
+            on_click=log_action(username=username ,action="DOWNLOAD_MANIFEST", notes=f"{username} downloaded the manifest {st.session_state.outbound_filename}.")
         )
+
+    with col3:
+        # Button for logging custom notes
+        create_text_input_with_logging(username=username)
