@@ -18,8 +18,8 @@ def file_handler():
     and store content for loading/unloading tasks.
     """
     st.title("File Handler")
-    username = st.session_state.get("user_name", "Guest")
-    first_name = st.session_state.get("first_name", "User")
+    username = st.session_state.get("username", "User")
+    first_name = st.session_state.get("firstname", "User")
     st.write(f"Hello, {first_name}!")
 
     # File uploader
@@ -42,17 +42,18 @@ def file_handler():
 
         # Process file and initialize grid
         file_lines = process_file_content(file_content)
-        st.session_state["file_content"] = file_content  # Store raw manifest
-        st.session_state["file_name"] = filename  # Store the file name
-        st.session_state["ship_grid"] = create_ship_grid(
-            8, 12)  # Initialize empty grid
-        st.session_state["containers"] = []  # Initialize container list
+        st.session_state.file_content = file_content  # Store raw manifest
+        st.session_state.filename = filename  # Store the file name
+        if "ship_grid" not in st.session_state:
+            st.session_state.ship_grid = create_ship_grid(
+                8, 12)  # Initialize empty grid
+        st.session_state.containers = []  # Initialize container list
         update_ship_grid(
-            file_lines, st.session_state["ship_grid"], st.session_state["containers"])
+            file_lines, st.session_state.ship_grid, st.session_state.containers)
 
         # Validate grid structure
         try:
-            validate_ship_grid(st.session_state["ship_grid"])
+            validate_ship_grid(st.session_state.ship_grid)
         except ValueError as e:
             st.error(f"Grid validation failed: {e}")
             return
@@ -67,7 +68,7 @@ def file_handler():
         # Provide navigation to the next page
         if create_button("Proceed to Operations"):
             log_proceed_to_operations(logs_collection, username)
-            st.session_state["page"] = "operation"
+            st.session_state.page = "operation"
             st.rerun()
 
     # Logout button

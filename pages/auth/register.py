@@ -55,8 +55,8 @@ def register():
                 create_navigation_button(
                     None, "login", st.session_state, trigger_redirect=True)
                 st.success("Registration successful! Redirecting to login...")
-                
-                st.session_state["page"] = "login"
+
+                st.session_state.page = "login"
                 st.rerun()
             else:
                 try:
@@ -69,4 +69,3 @@ def register():
     with col2:
         create_navigation_button(
             "Already have an account? Login here", "login", st.session_state)
-

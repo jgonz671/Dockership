@@ -9,8 +9,8 @@ def operation():
     """
     # Get session state and user information
     state_manager = StateManager(st.session_state)
-    username = st.session_state.get("user_name", "Guest")
-    first_name = st.session_state.get("first_name", "User")
+    username = st.session_state.get("username", "User")
+    first_name = st.session_state.get("firstname", "User")
 
     # Welcome text
     st.title("Operations")
@@ -46,7 +46,7 @@ def operation():
                 session_state=st.session_state
             ):
                 if "file_content" in st.session_state:
-                    del st.session_state["file_content"]
-                st.rerun()
+                    del st.session_state.file_content
+                st.rerun()  # Navigate to the File Handler page
         with col4:
             create_logout_button(st.session_state)
