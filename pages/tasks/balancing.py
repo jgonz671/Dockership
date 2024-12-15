@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import plotly.graph_objects as go
 from copy import deepcopy
+from utils.components.buttons import create_navigation_button
 
 from tasks.ship_balancer import (
     create_ship_grid,
@@ -98,11 +99,8 @@ def balancing_page():
     with col1:
         if create_navigation_button("Back to Operations", "operation", st.session_state):
             st.rerun()
-
     # Streamlit App
     st.title("Ship Balancing System")
-    # Sidebar for grid setup
-    st.sidebar.header("Ship Grid Setup")
     rows = 8  # Fixed to match the manifest
     columns = 12  # Fixed to match the manifest
 
