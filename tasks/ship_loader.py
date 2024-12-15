@@ -140,8 +140,8 @@ def move_blocking_container_low_capacity(ship_grid, block_row, block_col, contai
     cost = move_container(ship_grid, (block_row, block_col), (target_row, target_col), messages, first_move)
     return cost, (target_row, target_col)
 
-def load_containers(ship_grid, container_names):
-    """Load containers from origin."""
+def load_containers(ship_grid, container_names, container_weights):
+    """Load containers efficiently, starting from leftmost columns."""
     messages = []
     total_cost = 0
     origin = (len(ship_grid) - 1, 0)
@@ -156,8 +156,10 @@ def load_containers(ship_grid, container_names):
         move_cost = calculate_move_cost(origin, target_pos, first_move)
         total_cost += move_cost
         first_move = False
+        # Get the weight from the provided weights
+        weight = container_weights.get(container_name, 0.0)
 
-        weight = random.randint(10000, 100000)
+        # Place the container with the specified weight
         row, col = target_pos
         ship_grid[row][col] = Slot(
             container=Container(name=container_name, weight=weight),
@@ -167,11 +169,12 @@ def load_containers(ship_grid, container_names):
 
         messages.append(
             f"Container '{container_name}' loaded at [{row + 1}, {col + 1}] "
-            f"with weight {weight}. Move cost: {move_cost} seconds"
+            f"with weight {weight} kg. Move cost: {move_cost} seconds"
         )
 
+    # Calculate total operation cost
     messages.append(f"Total loading cost: {total_cost} seconds")
-    return ship_grid, messages, total_cost
+    return messages, total_cost
 
 def handle_origin_container(ship_grid, origin, container_names, current_capacity, messages, first_move):
     """Handle container at origin position based on grid capacity."""
