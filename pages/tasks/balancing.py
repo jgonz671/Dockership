@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import plotly.graph_objects as go
 from copy import deepcopy
+from utils.components.buttons import create_navigation_button
 
 from tasks.ship_balancer import (
     create_ship_grid,
@@ -87,10 +88,11 @@ def display_total_moves_and_time():
 
         
 def balancing_page():
-    # Streamlit App
+    col1, _ = st.columns([2, 8])  # Center the button
+    with col1:
+        if create_navigation_button("Back to Operations", "operation", st.session_state):
+            st.rerun()
     st.title("Ship Balancing Project")
-    # Sidebar for grid setup
-    st.sidebar.header("Ship Grid Setup")
     rows = 8  # Fixed to match the manifest
     columns = 12  # Fixed to match the manifest
     if "steps" not in st.session_state:
