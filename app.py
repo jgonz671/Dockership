@@ -23,12 +23,10 @@ db_config = DBConfig()
 db = db_config.connect()
 
 # Check database connection
-if db_config.check_connection():
-    st.sidebar.success("✅ Connected to MongoDB successfully.")
-else:
-    st.sidebar.error(
-        "❌ Failed to connect to MongoDB. Check your configuration.")
+if not db_config.check_connection():
+    st.sidebar.error("❌ Failed to connect to MongoDB.")
     st.stop()
+
 
 # Initialize session state manager
 state_manager = StateManager(st.session_state)
