@@ -1,5 +1,8 @@
 # Dockership/utils/components/buttons.py
 import streamlit as st
+from utils.logging import create_logs_file  # Import log file creation function
+import os
+
 
 def create_button(label, on_click=None, args=None, **kwargs):
     """
@@ -16,6 +19,50 @@ def create_button(label, on_click=None, args=None, **kwargs):
     """
     button = st.button(label, on_click=on_click, args=args, **kwargs)
     return button
+
+
+def generate_and_download_log_file():
+    """
+    Generates the log file, provides notifications, and starts the download.
+    """
+    # Step 1: Generate the log file
+    file_path = create_logs_file()
+
+    if file_path:
+        # Notify the user that the file was successfully created
+        try:
+            st.toast("✅ Log file created successfully!")
+        except AttributeError:
+            st.success("✅ Log file created successfully!")
+
+        # Step 2: Provide the file download link
+        with open(file_path, "rb") as file:
+            file_contents = file.read()
+            st.download_button(
+                label="📥 Download Log File",
+                data=file_contents,
+                file_name=os.path.basename(file_path),
+                mime="text/plain",
+                help="Download the generated log file"
+            )
+            try:
+                st.toast("📥 Download started!")
+            except AttributeError:
+                st.info("📥 Download started!")
+    else:
+        st.error("❌ Failed to generate the log file. Please try again.")
+
+
+def create_log_file_download_button():
+    """
+    Creates a button that triggers the log file generation and download process.
+    """
+    st.subheader("Download Log File")
+    # st.button("Generate and Download Log File",
+    #           on_click=generate_and_download_log_file)
+    
+    return create_button("Download Log File", on_click=generate_and_download_log_file)
+
 
 def create_navigation_button(label, page_name, session_state, trigger_redirect=False, **kwargs):
     """
@@ -39,6 +86,7 @@ def create_navigation_button(label, page_name, session_state, trigger_redirect=F
     else:
         return create_button(label, on_click=navigate, **kwargs)
 
+
 def create_logout_button(session_state):
     """
     Creates a logout button that clears the session state and redirects to the login page.
@@ -60,6 +108,7 @@ def create_logout_button(session_state):
             st.success("Logout successful!")
 
     return create_button("Logout", on_click=logout)
+
 
 def create_centered_buttons(label_left, label_right, action_left, action_right):
     """

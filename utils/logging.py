@@ -129,21 +129,3 @@ def create_logs_file():
     except Exception as e:
         print(f"❌ Failed to create logs file: {e}")
         return None
-
-
-if __name__ == "__main__":
-    # Example Usage
-    # Log a user action
-    log_action("admin_user", "Generate Logs", "Test log entry.")
-
-    # Get and print logs from the last year
-    logs = get_logs_last_year()
-    print(f"Retrieved {len(logs)} logs from the last year.")
-
-    # Format and display logs
-    formatted = format_logs_to_string(logs)
-    for log_entry in formatted:
-        print(log_entry)
-
-    # Create a .txt file with logs
-    create_logs_file()
