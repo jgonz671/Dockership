@@ -136,7 +136,7 @@ def balancing_page():
         st.session_state.final_plot = None
         st.session_state.steps = []
 
-    # Use manuscript from file_handler
+    # Use manifest from file_handler
     if "file_content" in st.session_state:
         try:
             # Use file content from file_handler
@@ -145,11 +145,11 @@ def balancing_page():
             st.session_state.initial_plot = plotly_visualize_grid(
                 st.session_state.ship_grid, title="Initial Ship Grid"
             )
-            st.success("Ship grid updated successfully from manuscript.")
+            st.success("Ship grid updated successfully from manifest.")
         except Exception as e:
-            st.error(f"Error processing the manuscript: {e}")
+            st.error(f"Error processing the manifest: {e}")
     else:
-        st.error("No manuscript available. Please upload a file in the File Handler page.")
+        st.error("No manifest available. Please upload a file in the File Handler page.")
 
     # Display initial grid
     if st.session_state.initial_plot:
@@ -618,25 +618,25 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
     return fig
 
 
-def convert_grid_to_manuscript(ship_grid):
+def convert_grid_to_manifest(ship_grid):
     """
-    Converts the updated grid back to manuscript format.
+    Converts the updated grid back to manifest format.
 
     Args:
         ship_grid (list): The ship grid with Slot objects.
 
     Returns:
-        str: Manuscript string representing the updated grid.
+        str: manifest string representing the updated grid.
     """
-    manuscript_lines = []
+    manifest_lines = []
     for row_idx, row in enumerate(ship_grid):
         for col_idx, slot in enumerate(row):
             coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
             weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
             status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
             line = f"{coordinates}, {weight}, {status_or_name}"
-            manuscript_lines.append(line)
-    return "\n".join(manuscript_lines)
+            manifest_lines.append(line)
+    return "\n".join(manifest_lines)
 
 import os
 
@@ -677,7 +677,7 @@ def balancing_page():
         st.session_state.final_plot = None
         st.session_state.steps = []
 
-    # Use manuscript from file_handler
+    # Use manifest from file_handler
     if "file_content" in st.session_state:
         try:
             # Use file content from file_handler
@@ -686,11 +686,11 @@ def balancing_page():
             st.session_state.initial_plot = plotly_visualize_grid(
                 st.session_state.ship_grid, title="Initial Ship Grid"
             )
-            st.success("Ship grid updated successfully from manuscript.")
+            st.success("Ship grid updated successfully from manifest.")
         except Exception as e:
-            st.error(f"Error processing the manuscript: {e}")
+            st.error(f"Error processing the manifest: {e}")
     else:
-        st.error("No manuscript available. Please upload a file in the File Handler page.")
+        st.error("No manifest available. Please upload a file in the File Handler page.")
 
     # Display initial grid
     if st.session_state.initial_plot:
@@ -741,14 +741,14 @@ def balancing_page():
         st.subheader("Final Ship Grid After Balancing")
         st.plotly_chart(st.session_state.final_plot)
         
-        # Generate updated manuscript
-        updated_manuscript = convert_grid_to_manuscript(st.session_state.ship_grid)
-        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manuscript.txt"))
+        # Generate updated manifest
+        updated_manifest = convert_grid_to_manifest(st.session_state.ship_grid)
+        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manifest.txt"))
         
         # Provide download button
         st.download_button(
-            label="Download Updated Manuscript",
-            data=updated_manuscript,
+            label="Download Updated Manifest",
+            data=updated_manifest,
             file_name=outbound_filename,
             mime="text/plain",
         )
@@ -917,25 +917,25 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
 
     return fig
 
-def convert_grid_to_manuscript(ship_grid):
+def convert_grid_to_manifest(ship_grid):
     """
-    Converts the updated grid back to manuscript format.
+    Converts the updated grid back to manifest format.
 
     Args:
         ship_grid (list): The ship grid with Slot objects.
 
     Returns:
-        str: Manuscript string representing the updated grid.
+        str: manifest string representing the updated grid.
     """
-    manuscript_lines = []
+    manifest_lines = []
     for row_idx, row in enumerate(ship_grid):
         for col_idx, slot in enumerate(row):
             coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
             weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
             status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
             line = f"{coordinates}, {weight}, {status_or_name}"
-            manuscript_lines.append(line)
-    return "\n".join(manuscript_lines)
+            manifest_lines.append(line)
+    return "\n".join(manifest_lines)
 
 import os
 
@@ -976,7 +976,7 @@ def balancing_page():
         st.session_state.final_plot = None
         st.session_state.steps = []
 
-    # Use manuscript from file_handler
+    # Use manifest from file_handler
     if "file_content" in st.session_state:
         try:
             # Use file content from file_handler
@@ -985,11 +985,11 @@ def balancing_page():
             st.session_state.initial_plot = plotly_visualize_grid(
                 st.session_state.ship_grid, title="Initial Ship Grid"
             )
-            st.success("Ship grid updated successfully from manuscript.")
+            st.success("Ship grid updated successfully from manifest.")
         except Exception as e:
-            st.error(f"Error processing the manuscript: {e}")
+            st.error(f"Error processing the manifest: {e}")
     else:
-        st.error("No manuscript available. Please upload a file in the File Handler page.")
+        st.error("No manifest available. Please upload a file in the File Handler page.")
 
     # Display initial grid
     if st.session_state.initial_plot:
@@ -1040,14 +1040,14 @@ def balancing_page():
         st.subheader("Final Ship Grid After Balancing")
         st.plotly_chart(st.session_state.final_plot)
         
-        # Generate updated manuscript
-        updated_manuscript = convert_grid_to_manuscript(st.session_state.ship_grid)
-        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manuscript.txt"))
+        # Generate updated manifest
+        updated_manifest = convert_grid_to_manifest(st.session_state.ship_grid)
+        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manifest.txt"))
         
         # Provide download button
         st.download_button(
-            label="Download Updated Manuscript",
-            data=updated_manuscript,
+            label="Download Updated manifest",
+            data=updated_manifest,
             file_name=outbound_filename,
             mime="text/plain",
         )
@@ -1219,25 +1219,25 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
 
     return fig
 
-def convert_grid_to_manuscript(ship_grid):
+def convert_grid_to_manifest(ship_grid):
     """
-    Converts the updated grid back to manuscript format.
+    Converts the updated grid back to manifest format.
 
     Args:
         ship_grid (list): The ship grid with Slot objects.
 
     Returns:
-        str: Manuscript string representing the updated grid.
+        str: manifest string representing the updated grid.
     """
-    manuscript_lines = []
+    manifest_lines = []
     for row_idx, row in enumerate(ship_grid):
         for col_idx, slot in enumerate(row):
             coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
             weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
             status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
             line = f"{coordinates}, {weight}, {status_or_name}"
-            manuscript_lines.append(line)
-    return "\n".join(manuscript_lines)
+            manifest_lines.append(line)
+    return "\n".join(manifest_lines)
 
 import os
 
@@ -1595,7 +1595,7 @@ def balancing_page():
         st.session_state.steps = []
         st.session_state.ship_grids = []  # Store grids for steps visualization
 
-    # Use manuscript from file_handler
+    # Use manifest from file_handler
     if "file_content" in st.session_state:
         try:
             # Use file content from file_handler
@@ -1604,11 +1604,11 @@ def balancing_page():
             st.session_state.initial_plot = plotly_visualize_grid(
                 st.session_state.ship_grid, title="Initial Ship Grid"
             )
-            st.success("Ship grid updated successfully from manuscript.")
+            st.success("Ship grid updated successfully from manifest.")
         except Exception as e:
-            st.error(f"Error processing the manuscript: {e}")
+            st.error(f"Error processing the manifest: {e}")
     else:
-        st.error("No manuscript available. Please upload a file in the File Handler page.")
+        st.error("No manifest available. Please upload a file in the File Handler page.")
 
     # Display initial grid
     if st.session_state.initial_plot:
@@ -1677,14 +1677,14 @@ def balancing_page():
         st.subheader("Final Ship Grid After Balancing")
         st.plotly_chart(st.session_state.final_plot)
 
-        # Generate updated manuscript
-        updated_manuscript = convert_grid_to_manuscript(st.session_state.ship_grid)
-        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manuscript.txt"))
+        # Generate updated manifest
+        updated_manifest = convert_grid_to_manifest(st.session_state.ship_grid)
+        outbound_filename = append_outbound_to_filename(st.session_state.get("file_name", "manifest.txt"))
 
         # Provide download button
         st.download_button(
-            label="Download Updated Manuscript",
-            data=updated_manuscript,
+            label="Download Updated Manifest",
+            data=updated_manifest,
             file_name=outbound_filename,
             mime="text/plain",
         )
