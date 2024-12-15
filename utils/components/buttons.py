@@ -160,7 +160,6 @@ def create_text_input_with_logging(username: str):
     Args:
         username (str): The name of the user performing the action.
     """
-    st.subheader("Log User Input")
 
     # Step 1: Display the first button to reveal the textbox
     if "show_text_input" not in st.session_state:
@@ -181,4 +180,4 @@ def create_text_input_with_logging(username: str):
         def log_note_action():
             log_text_input_action(username, user_input)
 
-        create_button("Log Text to MongoDB", on_click=log_note_action)
+        create_button("Log Note", on_click=log_note_action)

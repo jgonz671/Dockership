@@ -96,4 +96,4 @@ def file_handler():
             st.rerun()
 
     # Logout button
-    create_logout_button(st.session_state)
+    create_logout_button(username, st.session_state)
