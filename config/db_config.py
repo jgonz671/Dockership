@@ -1,6 +1,7 @@
 import os
 from pymongo import MongoClient, errors
 from pymongo.collection import Collection
+from datetime import datetime
 
 
 class DBConfig:
@@ -27,7 +28,7 @@ class DBConfig:
             self.client = MongoClient(mongo_uri)
             self.db = self.client[os.getenv("MONGO_DBNAME", "dockership")]
 
-            # Ensure critical collections exist
+            # Ensure critical collections exist and initialize data
             self._initialize_collections()
 
             return self.db
@@ -38,43 +39,49 @@ class DBConfig:
 
     def _initialize_collections(self):
         """
-        Ensures required collections exist and validates their schemas.
+        Ensures required collections exist and inserts sample data where applicable.
         """
-        schemas = {
-            "users": {
-                "first_name": {"type": "string", "required": True, "max_length": 50},
-                "last_name": {"type": "string", "required": False, "max_length": 50},
-                "username": {"type": "string", "required": True, "unique": True, "max_length": 30},
-            },
-            "logs": {
-                # FK to users
-                "username": {"type": "string", "required": True},
-                "timestamp": {"type": "datetime", "required": True},
-                "action": {"type": "string", "required": True},
-                "notes": {"type": "string", "required": False},
-            },
-            "manifests": {
-                # FK to users
-                "username": {"type": "string", "required": True},
-                "incoming_file": {"type": "string", "required": True},
-                "outgoing_file": {"type": "string", "required": True},
-            },
-            "logfile": {
-                "timestamp": {"type": "datetime", "required": True},
-                "message": {"type": "string", "required": True},
-            },
+        # Required collections with optional sample data
+        collections_with_samples = {
+            "users": [
+                {"first_name": "John", "last_name": "Doe", "username": "johndoe"},
+                {"first_name": "Jane", "last_name": "Smith", "username": "janesmith"}
+            ],
+            "logs": [
+                {"username": "system", "timestamp": datetime.utcnow(), "action": "Database initialized", "notes": "Initial setup completed."}
+            ],
+            "manifests": [
+                {"username": "system", "incoming_file": "manifest_inbound.txt", "outgoing_file": "manifest_outbound.txt"}
+            ],
+            "logfile": [
+                {"timestamp": datetime.utcnow(), "message": "Logfile initialized."}
+            ],
+            "ship_state": [
+                {"grid": [
+                    [{"has_container": True, "container": {"name": "Alpha", "weight": 1000}, "available": False}],
+                    [{"has_container": False, "container": None, "available": True}]
+                ],
+                "updated_at": datetime.utcnow(),
+                "notes": "Initial ship grid setup."}
+            ],
+            "operations": [
+                {"operation_id": "OP001", "type": "load", "container": {"name": "Alpha", "weight": 1000},
+                 "location": {"row": 0, "col": 0}, "timestamp": datetime.utcnow(), "performed_by": "system"}
+            ]
         }
 
-        for collection, schema in schemas.items():
-            self._ensure_collection_schema(collection, schema)
+        # Initialize collections
+        for collection_name, sample_data in collections_with_samples.items():
+            if collection_name not in self.db.list_collection_names():
+                self.db.create_collection(collection_name)
+                print(f"✅ Created '{collection_name}' collection.")
 
-    def _ensure_collection_schema(self, collection_name, schema):
-        """
-        Ensures a collection exists and applies the schema (simulation).
-        """
-        collection = self.db[collection_name]
-
-        # Add schema validation logic here if using MongoDB with validation rules (e.g., JSON Schema)
+                # Insert sample data
+                if sample_data:
+                    self.db[collection_name].insert_many(sample_data)
+                    print(f"🔹 Inserted sample data into '{collection_name}' collection.")
+            else:
+                print(f"🔹 '{collection_name}' collection already exists.")
 
     def get_collection(self, name) -> Collection:
         """
