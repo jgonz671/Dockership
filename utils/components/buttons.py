@@ -88,7 +88,7 @@ def create_navigation_button(label, page_name, session_state, trigger_redirect=F
         return create_button(label, on_click=navigate, **kwargs)
 
 
-def create_logout_button(session_state):
+def create_logout_button(username: str, session_state):
     """
     Creates a logout button that clears the session state and redirects to the login page.
 
@@ -101,6 +101,8 @@ def create_logout_button(session_state):
     def logout():
         session_state.clear()  # Clears all session state variables.
         session_state["page"] = "login"  # Redirect to the login page.
+
+        log_action(username=username, action="LOGOUT", notes=f"{username} logged out.")
 
         # Floating logout message (if Streamlit supports `st.toast`, otherwise fallback to success message)
         try:

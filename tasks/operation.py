@@ -1,4 +1,4 @@
-from utils.logging import log_user_action
+from utils.logging import log_action
 from config.db_config import DBConfig
 
 # Initialize DBConfig
@@ -29,11 +29,10 @@ def perform_operation(username: str, operation_type: str):
         raise ValueError(f"Invalid operation type: {operation_type}")
 
     # Log the operation action
-    log_user_action(
-        logs_collection,
-        username,
-        f"User initiated the {operation_map[operation_type]} operation.",
-        "",
+    log_action(
+        username=username,
+        action="OPERATION",
+        notes=f"User initiated the {operation_map[operation_type]} operation.",
     )
 
     # Return the page name for navigation

@@ -2,6 +2,7 @@ import streamlit as st
 from utils.components.buttons import create_navigation_button, create_logout_button
 from tasks.operation import perform_operation
 from utils.state_manager import StateManager
+from utils.logging import log_action
 
 def operation():
     """
@@ -48,5 +49,8 @@ def operation():
                 if "file_content" in st.session_state:
                     del st.session_state.file_content
                 st.rerun()  # Navigate to the File Handler page
+                log_action(username=username, action="Upload Another File", notes=f"{username} requested to upload another file")
+
+
         with col4:
-            create_logout_button(st.session_state)
+            create_logout_button(username, st.session_state)
