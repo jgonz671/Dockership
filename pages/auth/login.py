@@ -29,9 +29,9 @@ def login():
                 return
 
             # Save user details to session state
-            st.session_state["user_name"] = user["username"]
-            st.session_state["first_name"] = user["first_name"]
-            st.session_state["page"] = "file_handler"  # Redirect to file handler
+            st.session_state.username = user["username"]
+            st.session_state.firstname = user["first_name"]
+            st.session_state.page = "file_handler"  # Redirect to file handler
 
             # Display success message
             try:
