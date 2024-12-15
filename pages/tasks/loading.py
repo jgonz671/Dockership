@@ -23,6 +23,10 @@ def initialize_session_state(rows, cols):
         st.session_state.updated_manifest = ""
     if "outbound_filename" not in st.session_state:
         st.session_state.outbound_filename = "manifest.txt"
+    if "load_steps" not in st.session_state:
+        st.session_state.load_steps = []
+    if "unload_steps" not in st.session_state:
+        st.session_state.unload_steps = []
 
 def reset_loading_state():
     st.session_state.loading_step = "input_names"
@@ -30,7 +34,7 @@ def reset_loading_state():
     st.session_state.container_weights = {}
 
 def loading_task():
-    col1, _ = st.columns([2, 8])  # Center the button
+    col1, _ = st.columns([2, 8])
     with col1:
         if create_navigation_button("Back to Operations", "operation", st.session_state):
             st.rerun()
@@ -41,42 +45,59 @@ def loading_task():
     rows, cols = 8, 12
     initialize_session_state(rows, cols)
 
-    # Display current grid
-    st.subheader("Current Ship Grid")
-    plotly_visualize_grid(st.session_state.ship_grid, title="Ship Grid")
-
     # Action selection
     tab = st.radio("Choose Action", ["Load Containers", "Unload Containers"], horizontal=True)
+
+    # Step visualization based on selected tab
+    if tab == "Load Containers" and st.session_state.load_steps:
+        step = st.selectbox(
+            "View loading steps:",
+            options=[step['name'] for step in st.session_state.load_steps]
+        )
+        step_data = next(s for s in st.session_state.load_steps if s['name'] == step)
+        plotly_visualize_grid(step_data['grid'], title=f"Ship Grid - {step}")
+        st.info(f"Step Cost: {step_data['cost']} seconds")
+        for msg in step_data['messages']:
+            st.write(msg)
+    elif tab == "Unload Containers" and st.session_state.unload_steps:
+        step = st.selectbox(
+            "View unloading steps:",
+            options=[step['name'] for step in st.session_state.unload_steps]
+        )
+        step_data = next(s for s in st.session_state.unload_steps if s['name'] == step)
+        plotly_visualize_grid(step_data['grid'], title=f"Ship Grid - {step}")
+        st.info(f"Step Cost: {step_data['cost']} seconds")
+        for msg in step_data['messages']:
+            st.write(msg)
+    else:
+        # Display current grid if no steps available
+        plotly_visualize_grid(st.session_state.ship_grid, title="Current Ship Grid")
 
     if tab == "Load Containers":
         st.subheader("Load Containers")
 
         if st.session_state.loading_step == "input_names":
-            # Step 1: Input Container Names
             container_names_input = st.text_input(
                 "Container Names (comma-separated)",
                 placeholder="Enter container names (e.g., Alpha,Beta,Gamma)"
             )
-
             if st.button("Next"):
                 if container_names_input:
                     container_names = [name.strip() for name in container_names_input.split(",") if name.strip()]
-                    if not container_names:
-                        st.error("Please provide valid container names.")
-                    else:
+                    if container_names:
                         st.session_state.container_names_to_load = container_names
                         st.session_state.loading_step = "input_weights"
                         st.rerun()
+                    else:
+                        st.error("Please provide valid container names.")
                 else:
-                    st.error("Please provide valid container names.")
+                    st.error("Please provide container names.")
 
         elif st.session_state.loading_step == "input_weights":
-            # Step 2: Input Weights for Each Container
             st.subheader("Enter Container Weights")
-            container_weights = {}
             for name in st.session_state.container_names_to_load:
                 if name not in st.session_state.container_weights:
-                    st.session_state.container_weights[name] = 0.0  
+                    st.session_state.container_weights[name] = 0.0
                 st.session_state.container_weights[name] = st.number_input(
                     f"Weight for '{name}' (kg):",
                     min_value=0,
@@ -87,12 +108,14 @@ def loading_task():
                 )
 
             if st.button("Confirm Load"):
-                # Proceed to load containers with the provided weights
-                container_names = st.session_state.container_names_to_load
-                container_weights = st.session_state.container_weights
-                messages, cost = load_containers(st.session_state.ship_grid, container_names, container_weights)
+                updated_grid, messages, cost, steps = load_containers(
+                    st.session_state.ship_grid,
+                    st.session_state.container_names_to_load
+                )
+                st.session_state.ship_grid = updated_grid
                 st.session_state.messages.extend(messages)
                 st.session_state.total_cost += cost
+                st.session_state.load_steps = steps
                 reset_loading_state()
                 st.rerun()
 
@@ -105,30 +128,23 @@ def loading_task():
 
         if st.button("Unload Containers"):
             if container_names_input:
-                container_names = [name.strip()
-                                   for name in container_names_input.split(",")]
-                updated_grid, messages, cost = unload_containers(
-                    st.session_state.ship_grid, container_names)
-                st.session_state.ship_grid = updated_grid  # Update session state
+                container_names = [name.strip() for name in container_names_input.split(",")]
+                updated_grid, messages, cost, steps = unload_containers(
+                    st.session_state.ship_grid, container_names
+                )
+                st.session_state.ship_grid = updated_grid
                 st.session_state.messages.extend(messages)
                 st.session_state.total_cost += cost
-
-                for message in messages:
-                    if "Error" in message:
-                        st.error(message)
-                    else:
-                        st.success(message)
-
-                plotly_visualize_grid(
-                    st.session_state.ship_grid, title="Updated Ship Grid")
+                st.session_state.unload_steps = steps
+                st.rerun()
             else:
                 st.error("Please provide valid container names.")
 
-    # Display total cost and action history
+    # Display total cost
     st.subheader("Operation Summary")
     st.info(f"Total Operation Cost: {st.session_state.total_cost} seconds")
 
-    # Force manifest update button
+    # Manifest handling
     st.subheader("Update/Download Manifest")
     if st.button("Update Manifest"):
         updated_manifest = convert_grid_to_manifest(st.session_state.ship_grid)
@@ -139,7 +155,6 @@ def loading_task():
         st.session_state.outbound_filename = outbound_filename
         st.success("Manifest updated successfully!")
 
-    # Provide download button
     st.download_button(
         label="Download Updated Manifest",
         data=st.session_state.updated_manifest,
@@ -147,6 +162,7 @@ def loading_task():
         mime="text/plain",
     )
 
+    # Display action history
     st.subheader("Action History")
     for msg in st.session_state.messages:
         st.write(msg)

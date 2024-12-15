@@ -144,37 +144,62 @@ def move_blocking_container_low_capacity(ship_grid, block_row, block_col, contai
     return cost, (target_row, target_col)
 
 def load_containers(ship_grid, container_names):
-    """Load containers from origin."""
+    """Load containers with step-by-step tracking."""
     messages = []
     total_cost = 0
+    steps = []
+    current_grid = deepcopy(ship_grid)
+
+    # Initial state
+    steps.append({
+        'name': 'Initial State',
+        'grid': deepcopy(current_grid),
+        'messages': [],
+        'cost': 0
+    })
+
     origin = (len(ship_grid) - 1, 0)
     first_move = True
 
     for container_name in container_names:
-        target_pos = find_next_available_position(ship_grid)
+        step_messages = []
+        target_pos = find_next_available_position(current_grid)
+        
         if target_pos == (-1, -1):
-            messages.append(f"Error: No available positions for container '{container_name}'")
-            continue
+            step_messages.append(f"Error: No available positions for container '{container_name}'")
+            messages.extend(step_messages)
+            return current_grid, messages, total_cost, steps
 
-        move_cost = calculate_move_cost(origin, target_pos, first_move)
-        total_cost += move_cost
-        first_move = False
-
-        weight = random.randint(10000, 100000)
+        # Calculate move cost and load container
         row, col = target_pos
-        ship_grid[row][col] = Slot(
+        move_cost = calculate_move_cost(origin, target_pos, first_move)
+        weight = random.randint(10000, 100000)  # Random weight between 10-100 tons
+        
+        current_grid[row][col] = Slot(
             container=Container(name=container_name, weight=weight),
             hasContainer=True,
             available=False
         )
 
-        messages.append(
-            f"Container '{container_name}' loaded at [{row + 1}, {col + 1}] "
-            f"with weight {weight}. Move cost: {move_cost} seconds"
+        step_messages.append(
+            f"Container '{container_name}' loaded at position [{row + 1}, {col + 1}] "
+            f"with weight {weight}kg. Move cost: {move_cost} seconds"
         )
 
+        # Add step for this container load
+        steps.append({
+            'name': f'Load Container {container_name}',
+            'grid': deepcopy(current_grid),
+            'messages': step_messages.copy(),
+            'cost': move_cost
+        })
+
+        total_cost += move_cost
+        messages.extend(step_messages)
+        first_move = False
+
     messages.append(f"Total loading cost: {total_cost} seconds")
-    return ship_grid, messages, total_cost
+    return current_grid, messages, total_cost, steps
 
 def handle_origin_container(ship_grid, origin, container_names, current_capacity, messages, first_move):
     """Handle container at origin position based on grid capacity."""
@@ -226,100 +251,143 @@ def handle_origin_container(ship_grid, origin, container_names, current_capacity
     return total_cost, buffer, first_move, True, temp_position
 
 def unload_containers(ship_grid, container_names, buffer_capacity=5):
-    """Unload containers efficiently, handling duplicates by selecting optimal positions."""
+    """Unload containers efficiently with step tracking."""
     messages = []
     total_cost = 0
-    origin = (len(ship_grid) - 1, 0)
+    steps = []  # Track steps
+    current_grid = deepcopy(ship_grid)
+
+    # Initial state
+    steps.append({
+        'name': 'Initial State',
+        'grid': deepcopy(current_grid),
+        'messages': [],
+        'cost': 0
+    })
+
+    origin = (len(current_grid) - 1, 0)
     container_names = set(container_names)
     first_move = True
     buffer = []
     unloaded_containers = set()
 
-    current_capacity = calculate_grid_capacity(ship_grid)
+    current_capacity = calculate_grid_capacity(current_grid)
 
-    # Handle origin container first
+    # Handle origin container
     origin_cost, origin_buffer, first_move, success, temp_position = handle_origin_container(
-        ship_grid, origin, container_names, current_capacity, messages, first_move
+        current_grid, origin, container_names, current_capacity, messages, first_move
     )
     if not success:
-        return ship_grid, messages, total_cost
+        return current_grid, messages, total_cost, steps
+        
+    if origin_cost > 0:
+        steps.append({
+            'name': 'Handle Origin Container',
+            'grid': deepcopy(current_grid),
+            'messages': messages.copy(),
+            'cost': origin_cost
+        })
+    
     total_cost += origin_cost
     buffer.extend(origin_buffer)
 
-    # Find all container positions including duplicates
-    container_positions = find_container_positions(ship_grid, container_names)
-    
-    # Get optimal positions for containers with duplicates
-    optimal_positions = get_optimal_container_positions(ship_grid, container_positions, origin)
-    
-    # Sort containers by position (top to bottom, left to right)
+    # Find container positions and get optimal positions
+    container_positions = find_container_positions(current_grid, container_names)
+    optimal_positions = get_optimal_container_positions(current_grid, container_positions, origin)
     containers_to_unload = [(name, pos) for name, pos in optimal_positions.items()]
     containers_to_unload.sort(key=lambda x: (-x[1][0], x[1][1]))
 
-    # Process containers
     for container_name, current_pos in containers_to_unload:
+        step_messages = []
+        step_cost = 0
+        
         if container_name in unloaded_containers:
             continue
 
         # Handle blocking containers
-        blocking = find_blocking_containers(ship_grid, current_pos[0], current_pos[1])
+        blocking = find_blocking_containers(current_grid, current_pos[0], current_pos[1])
         for block_row, block_col in blocking:
-            blocking_container = ship_grid[block_row][block_col].container
+            blocking_container = current_grid[block_row][block_col].container
             if blocking_container.name in container_names:
                 continue
 
             if current_capacity > 50.0 and len(buffer) < buffer_capacity:
-                # Move to buffer
                 buffer.append((blocking_container, block_col, None))
                 cost = calculate_move_cost((block_row, block_col), (-1, len(buffer) - 1), first_move)
-                messages.append(
-                    f"Moved blocking container '{blocking_container.name}' to buffer. Move cost: {cost} seconds."
+                step_messages.append(
+                    f"Moved blocking container '{blocking_container.name}' to buffer. Cost: {cost} seconds"
                 )
-                ship_grid[block_row][block_col] = Slot(container=None, hasContainer=False, available=True)
+                current_grid[block_row][block_col] = Slot(container=None, hasContainer=False, available=True)
             else:
-                # Move to nearest available position
                 cost, new_pos = move_blocking_container_low_capacity(
-                    ship_grid, block_row, block_col, container_names, messages, first_move
+                    current_grid, block_row, block_col, container_names, step_messages, first_move
                 )
                 if cost == -1:
-                    messages.append(f"Error: No available position for blocking container '{blocking_container.name}'.")
-                    return ship_grid, messages, total_cost
+                    messages.extend(step_messages)
+                    return current_grid, messages, total_cost, steps
             
-            total_cost += cost
+            step_cost += cost
             first_move = False
 
+            steps.append({
+                'name': f'Move Blocking Container {blocking_container.name}',
+                'grid': deepcopy(current_grid),
+                'messages': step_messages.copy(),
+                'cost': cost
+            })
+
         # Unload target container
-        container = ship_grid[current_pos[0]][current_pos[1]].container
-        cost = move_container(ship_grid, current_pos, origin, messages, first_move)
-        total_cost += cost
+        container = current_grid[current_pos[0]][current_pos[1]].container
+        cost = move_container(current_grid, current_pos, origin, step_messages, first_move)
+        step_cost += cost
         first_move = False
         
         unloaded_containers.add(container_name)
-        ship_grid[origin[0]][origin[1]] = Slot(container=None, hasContainer=False, available=True)
-        messages.append(f"Container '{container_name}' successfully unloaded from [{current_pos[0] + 1}, {current_pos[1] + 1}].")
+        current_grid[origin[0]][origin[1]] = Slot(container=None, hasContainer=False, available=True)
+        step_messages.append(f"Container '{container_name}' unloaded successfully")
 
-    # Restore buffer containers for high capacity case
-    if current_capacity > 50.0:
+        steps.append({
+            'name': f'Unload Container {container_name}',
+            'grid': deepcopy(current_grid),
+            'messages': step_messages.copy(),
+            'cost': step_cost
+        })
+        
+        total_cost += step_cost
+        messages.extend(step_messages)
+
+    # Restore buffer containers
+    if buffer:
+        step_messages = []
+        step_cost = 0
         while buffer:
             container, original_col, _ = buffer.pop(0)
             if container.name in container_names:
                 continue
 
-            target_row = find_lowest_available_position(ship_grid, original_col)
+            target_row = find_lowest_available_position(current_grid, original_col)
             if target_row == -1:
-                target_pos = find_next_available_position(ship_grid)
+                target_pos = find_next_available_position(current_grid)
                 if target_pos == (-1, -1):
-                    messages.append(f"Error: No available position to restore container '{container.name}' from buffer.")
+                    step_messages.append(f"Error: No position to restore container '{container.name}' from buffer.")
                     continue
                 row, col = target_pos
             else:
                 row, col = target_row, original_col
 
-            ship_grid[row][col] = Slot(container=container, hasContainer=True, available=False)
-            messages.append(f"Restored container '{container.name}' from buffer to [{row + 1}, {col + 1}].")
+            current_grid[row][col] = Slot(container=container, hasContainer=True, available=False)
+            step_messages.append(f"Restored container '{container.name}' from buffer to [{row + 1}, {col + 1}].")
 
-    messages.append(f"Total unloading cost: {total_cost} seconds.")
-    return ship_grid, messages, total_cost
+        steps.append({
+            'name': 'Restore Buffer Containers',
+            'grid': deepcopy(current_grid),
+            'messages': step_messages.copy(),
+            'cost': step_cost
+        })
+        messages.extend(step_messages)
+
+    messages.append(f"Total unloading cost: {total_cost} seconds")
+    return current_grid, messages, total_cost, steps
 
 
 def convert_grid_to_manuscript(ship_grid):
