@@ -1,6 +1,6 @@
 from config.db_config import DBConfig
 from utils.validators import validate_username, check_user_exists
-from utils.logging import log_user_action
+from utils.logging import log_action
 
 # Initialize DBConfig
 db_config = DBConfig()
@@ -33,6 +33,6 @@ def validate_and_check_user(username: str):
         return False, "Username not found. Please register.", None
 
     # Log the user action
-    log_user_action(logs_collection, username, "Login", "User logged in successfully.")
+    log_action(username=username, action="LOGIN", message=f"{username} logged in successfully.")
     
     return True, "", user
