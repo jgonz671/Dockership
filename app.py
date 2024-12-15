@@ -5,6 +5,7 @@ from pages.file_handler.file_handler import file_handler
 from pages.auth.register import register
 from pages.auth.login import login
 from utils.state_manager import StateManager
+from utils.grid_utils import create_ship_grid
 from config.db_config import DBConfig
 import os
 from dotenv import load_dotenv
@@ -23,12 +24,10 @@ db_config = DBConfig()
 db = db_config.connect()
 
 # Check database connection
-if db_config.check_connection():
-    st.sidebar.success("✅ Connected to MongoDB successfully.")
-else:
-    st.sidebar.error(
-        "❌ Failed to connect to MongoDB. Check your configuration.")
+if not db_config.check_connection():
+    st.sidebar.error("❌ Failed to connect to MongoDB.")
     st.stop()
+
 
 # Initialize session state manager
 state_manager = StateManager(st.session_state)
@@ -55,6 +54,10 @@ def render_page(page_name):
 
 # Main application loop
 if __name__ == "__main__":
-    if "updated_grid" not in st.session_state:
-        st.session_state["updated_grid"] = None  # Store the most recent grid
+    # Initialize session state
+    rows, cols = 8, 12
+
+    if "ship_grid" not in st.session_state:
+        st.session_state.ship_grid = create_ship_grid(
+            rows, cols)  # Store the most recent grid
     render_page(state_manager.get_page())
