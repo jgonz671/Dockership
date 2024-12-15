@@ -132,18 +132,93 @@ def load_containers(ship_grid, container_names):
     messages.append(f"Total loading cost: {total_cost} seconds")
     return messages, total_cost
 
-def unload_containers(ship_grid, container_names):
-    """
-    Unload containers efficiently, handling blocking containers.
-    Containers can be unloaded in any order by moving blocking containers temporarily.
-    """
+# def unload_containers(ship_grid, container_names):
+#     """
+#     Unload containers efficiently, handling blocking containers.
+#     Containers can be unloaded in any order by moving blocking containers temporarily.
+#     """
+#     messages = []
+#     total_cost = 0
+#     origin = (len(ship_grid) - 1, 0)  # Top-left position
+#     container_names = set(container_names)  # Convert to set for faster lookup
+#     first_move = True
+    
+#     # Create a queue of containers to unload with their positions
+#     containers_to_unload = []
+#     for row in range(len(ship_grid)):
+#         for col in range(len(ship_grid[0])):
+#             if (ship_grid[row][col].hasContainer and 
+#                 ship_grid[row][col].container.name in container_names):
+#                 containers_to_unload.append((row, col))
+    
+#     # Sort by column first, then by row (bottom to top)
+#     containers_to_unload.sort(key=lambda x: (x[1], x[0]))
+    
+#     for target_row, target_col in containers_to_unload:
+#         if not ship_grid[target_row][target_col].hasContainer:
+#             continue  # Container might have been moved already
+            
+#         # Find blocking containers
+#         blocking = find_blocking_containers(ship_grid, target_row, target_col)
+        
+#         # Move blocking containers to nearest empty column
+#         temp_moves = []  # Store temporary moves to restore later if needed
+#         for block_row, block_col in blocking:
+#             temp_row, temp_col = find_nearest_empty_column(
+#                 ship_grid, target_col, container_names
+#             )
+            
+#             if temp_row == -1:
+#                 messages.append(
+#                     f"Error: No available temporary position for blocking container "
+#                     f"at [{block_row + 1}, {block_col + 1}]"
+#                 )
+#                 continue
+                
+#             # Move blocking container
+#             cost = move_container(
+#                 ship_grid, 
+#                 (block_row, block_col), 
+#                 (temp_row, temp_col), 
+#                 messages, 
+#                 first_move
+#             )
+#             total_cost += cost
+#             first_move = False
+#             temp_moves.append((temp_row, temp_col))
+        
+#         # Now unload the target container
+#         cost = move_container(
+#             ship_grid,
+#             (target_row, target_col),
+#             origin,
+#             messages,
+#             first_move
+#         )
+#         total_cost += cost
+#         first_move = False
+        
+#         # Remove container from grid
+#         ship_grid[origin[0]][origin[1]] = Slot(
+#             container=None, hasContainer=False, available=True
+#         )
+#         messages.append(
+#             f"Container '{ship_grid[target_row][target_col].container.name}' "
+#             f"unloaded from [{target_row + 1}, {target_col + 1}]"
+#         )
+    
+#     messages.append(f"Total unloading cost: {total_cost} seconds")
+#     return messages, total_cost
+
+def unload_containers(ship_grid, container_names, buffer_capacity=5):
     messages = []
     total_cost = 0
-    origin = (len(ship_grid) - 1, 0)  # Top-left position
+    origin = (len(ship_grid) - 1, 0)  # Starting position for unloaded containers
     container_names = set(container_names)  # Convert to set for faster lookup
     first_move = True
-    
-    # Create a queue of containers to unload with their positions
+    buffer = []  # List to store containers temporarily
+
+    # Create a list of containers to unload, including their positions
     containers_to_unload = []
     for row in range(len(ship_grid)):
         for col in range(len(ship_grid[0])):
@@ -151,61 +226,67 @@ def unload_containers(ship_grid, container_names):
                 ship_grid[row][col].container.name in container_names):
                 containers_to_unload.append((row, col))
     
-    # Sort by column first, then by row (bottom to top)
+    # Sort by column and then row (bottom-to-top stacking order)
     containers_to_unload.sort(key=lambda x: (x[1], x[0]))
-    
+
     for target_row, target_col in containers_to_unload:
         if not ship_grid[target_row][target_col].hasContainer:
-            continue  # Container might have been moved already
-            
-        # Find blocking containers
+            messages.append(f"Warning: No container at [{target_row + 1}, {target_col + 1}] to unload.")
+            continue
+
+        # Identify blocking containers
         blocking = find_blocking_containers(ship_grid, target_row, target_col)
-        
-        # Move blocking containers to nearest empty column
-        temp_moves = []  # Store temporary moves to restore later if needed
+
+        # Move blocking containers to the buffer or temporary positions
         for block_row, block_col in blocking:
-            temp_row, temp_col = find_nearest_empty_column(
-                ship_grid, target_col, container_names
-            )
-            
-            if temp_row == -1:
+            if len(buffer) < buffer_capacity:
+                buffer.append(ship_grid[block_row][block_col].container)
+                cost = calculate_move_cost((block_row, block_col), (-1, len(buffer) - 1), first_move)
+                first_move = False
                 messages.append(
-                    f"Error: No available temporary position for blocking container "
-                    f"at [{block_row + 1}, {block_col + 1}]"
+                    f"Moved blocking container '{ship_grid[block_row][block_col].container.name}' "
+                    f"to buffer. Move cost: {cost} seconds."
                 )
-                continue
-                
-            # Move blocking container
-            cost = move_container(
-                ship_grid, 
-                (block_row, block_col), 
-                (temp_row, temp_col), 
-                messages, 
-                first_move
-            )
-            total_cost += cost
-            first_move = False
-            temp_moves.append((temp_row, temp_col))
-        
-        # Now unload the target container
-        cost = move_container(
-            ship_grid,
-            (target_row, target_col),
-            origin,
-            messages,
-            first_move
-        )
+                ship_grid[block_row][block_col] = Slot(container=None, hasContainer=False, available=True)
+                total_cost += cost
+            else:
+                temp_row, temp_col = find_nearest_empty_column(ship_grid, target_col, container_names)
+                if temp_row == -1:
+                    messages.append(
+                        f"Error: No available position for blocking container "
+                        f"'{ship_grid[block_row][block_col].container.name}'."
+                    )
+                    return messages, total_cost
+
+                cost = move_container(ship_grid, (block_row, block_col), (temp_row, temp_col), messages, first_move)
+                total_cost += cost
+                first_move = False
+
+        # Unload the target container
+        container = ship_grid[target_row][target_col].container
+        if container is None:
+            messages.append(f"Error: Target container at [{target_row + 1}, {target_col + 1}] is missing.")
+            continue
+
+        cost = move_container(ship_grid, (target_row, target_col), origin, messages, first_move)
         total_cost += cost
         first_move = False
-        
-        # Remove container from grid
-        ship_grid[origin[0]][origin[1]] = Slot(
-            container=None, hasContainer=False, available=True
-        )
-        messages.append(
-            f"Container '{ship_grid[target_row][target_col].container.name}' "
-            f"unloaded from [{target_row + 1}, {target_col + 1}]"
-        )
-    
-    messages.append(f"Total unloading cost: {total_cost} seconds")
+
+        # Remove container from origin after unloading
+        ship_grid[origin[0]][origin[1]] = Slot(container=None, hasContainer=False, available=True)
+        messages.append(f"Container '{container.name}' successfully unloaded from [{target_row + 1}, {target_col + 1}].")
+
+    # Restore containers from buffer back to grid
+    while buffer:
+        container = buffer.pop(0)
+        target_pos = find_next_available_position(ship_grid)
+        if target_pos == (-1, -1):
+            messages.append(f"Error: No available position to restore container '{container.name}' from buffer.")
+            continue
+
+        row, col = target_pos
+        ship_grid[row][col] = Slot(container=container, hasContainer=True, available=False)
+        messages.append(f"Restored container '{container.name}' from buffer to [{row + 1}, {col + 1}].")
+
+    messages.append(f"Total unloading cost: {total_cost} seconds.")
     return messages, total_cost
