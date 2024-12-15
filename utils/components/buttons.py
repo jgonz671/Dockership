@@ -1,6 +1,7 @@
 # Dockership/utils/components/buttons.py
 import streamlit as st
-from utils.logging import create_logs_file  # Import log file creation function
+# Import log file creation function
+from utils.logging import create_logs_file, log_action
 import os
 
 
@@ -60,7 +61,7 @@ def create_log_file_download_button():
     st.subheader("Download Log File")
     # st.button("Generate and Download Log File",
     #           on_click=generate_and_download_log_file)
-    
+
     return create_button("Download Log File", on_click=generate_and_download_log_file)
 
 
@@ -130,3 +131,52 @@ def create_centered_buttons(label_left, label_right, action_left, action_right):
             return "right_clicked"
 
     return None
+
+
+def log_text_input_action(username: str, text: str):
+    """
+    Logs the user-entered text to the logs collection in MongoDB.
+
+    Args:
+        username (str): The name of the user performing the action.
+        text (str): The text entered by the user.
+    """
+    if text.strip():  # Ensure text is not empty
+        log_action(username, "User Input Log", text)
+        try:
+            st.toast("✅ Note successfully logged!", icon="📝")
+        except AttributeError:
+            st.success("✅ Note successfully logged!")
+    else:
+        st.error("❌ Note cannot be empty. Please enter some text.")
+
+
+def create_text_input_with_logging(username: str):
+    """
+    Creates a button to reveal a text input box and another button to log the input.
+
+    Args:
+        username (str): The name of the user performing the action.
+    """
+    st.subheader("Log User Input")
+
+    # Step 1: Display the first button to reveal the textbox
+    if "show_text_input" not in st.session_state:
+        st.session_state.show_text_input = False
+
+    def reveal_text_input():
+        st.session_state.show_text_input = True
+
+    # Use the existing create_button for "Add a Note"
+    create_button("Add a Note", on_click=reveal_text_input)
+
+    # Step 2: Show textbox and log button only if enabled
+    if st.session_state.show_text_input:
+        user_input = st.text_area(
+            "Enter your text here:", key="user_text_input")
+
+        # Use the existing create_button for logging the note
+        def log_note_action():
+            log_text_input_action(username, user_input)
+
+        create_button("Log Text to MongoDB", on_click=log_note_action)
