@@ -1,3 +1,7 @@
+import os
+import streamlit as st
+import plotly.graph_objects as go
+from copy import deepcopy
 from tasks.ship_balancer import Container, Slot, manhattan_distance
 # from utils.log_manager import LogFileManager  # Import LogFileManager
 import copy
@@ -91,6 +95,39 @@ def move_container(ship_grid, from_pos, to_pos, messages, is_first_move=False):
     )
     
     return move_cost
+
+
+def convert_grid_to_manuscript(ship_grid):
+    """
+    Converts the updated grid back to manuscript format.
+    Args:
+        ship_grid (list): The ship grid with Slot objects.
+    Returns:
+        str: Manuscript string representing the updated grid.
+    """
+    manuscript_lines = []
+    for row_idx, row in enumerate(ship_grid):
+        for col_idx, slot in enumerate(row):
+            coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
+            weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
+            status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
+            line = f"{coordinates}, {weight}, {status_or_name}"
+            manuscript_lines.append(line)
+    return "\n".join(manuscript_lines)
+
+
+def append_outbound_to_filename(filename):
+    """
+    Appends 'OUTBOUND' to the filename before the extension.
+    Args:
+        filename (str): Original filename.
+    Returns:
+        str: Updated filename with 'OUTBOUND' appended.
+    """
+    name, ext = os.path.splitext(filename)
+    return f"{name}_OUTBOUND{ext}"
+
+
 
 def load_containers(ship_grid, container_names):
     """Load containers efficiently, starting from leftmost columns."""
