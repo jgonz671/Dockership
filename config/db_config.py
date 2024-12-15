@@ -59,10 +59,6 @@ class DBConfig:
                 "incoming_file": {"type": "string", "required": True},
                 "outgoing_file": {"type": "string", "required": True},
             },
-            "logfile": {
-                "timestamp": {"type": "datetime", "required": True},
-                "message": {"type": "string", "required": True},
-            },
         }
 
         for collection, schema in schemas.items():
