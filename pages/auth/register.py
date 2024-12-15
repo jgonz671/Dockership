@@ -5,7 +5,6 @@ from utils.components.textboxes import create_textbox
 from utils.validators import validate_username, validate_name
 from auth.register import register_user
 from config.db_config import DBConfig
-from utils.logging import log_user_action
 
 # Initialize DBConfig
 db_config = DBConfig()

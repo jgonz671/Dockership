@@ -33,6 +33,6 @@ def validate_and_check_user(username: str):
         return False, "Username not found. Please register.", None
 
     # Log the user action
-    log_action(username=username, action="LOGIN", message=f"{username} logged in successfully.")
+    log_action(username=username, action="LOGIN", notes=f"{username} logged in successfully.")
     
     return True, "", user

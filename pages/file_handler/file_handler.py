@@ -32,7 +32,7 @@ def file_handler():
         filename = uploaded_file.name
 
         # Log file upload
-        log_file_upload(logs_collection, username, filename)
+        log_file_upload(username, filename)
 
         # Validate file content
         is_valid, error_message = validate_file_content(file_content)
@@ -67,7 +67,7 @@ def file_handler():
 
         # Provide navigation to the next page
         if create_button("Proceed to Operations"):
-            log_proceed_to_operations(logs_collection, username)
+            log_proceed_to_operations(username)
             st.session_state.page = "operation"
             st.rerun()
 

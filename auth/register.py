@@ -1,6 +1,6 @@
 from config.db_config import DBConfig
 from utils.validators import check_user_exists
-from utils.logging import log_user_action
+from utils.logging import log_action
 
 # Initialize DBConfig
 db_config = DBConfig()
@@ -36,7 +36,6 @@ def register_user(first_name: str, last_name: str, username: str):
     })
 
     # Log registration action
-    log_user_action(logs_collection, username, "Registration",
-                    "User registered successfully.")
+    log_action(username=username, action="REGISTER", notes=f"{username} registered successfully.")
 
     return True
