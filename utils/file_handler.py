@@ -26,7 +26,7 @@ def log_file_upload(username, filename):
     log_action(
         username=username,
         action="UPLOAD_FILE",
-        notes=f"{username} uploaded file: {filename}",
+        notes=f"{username} uploaded Manifest: {filename}",
     )
 
 
