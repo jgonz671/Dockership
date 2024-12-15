@@ -302,7 +302,7 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
                         f"Error: No available position for blocking container "
                         f"'{ship_grid[block_row][block_col].container.name}'."
                     )
-                    return messages, total_cost
+                    return ship_grid, messages, total_cost
 
                 cost = move_container(ship_grid, (block_row, block_col), (temp_row, temp_col), messages, first_move)
                 total_cost += cost
@@ -335,4 +335,4 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
         messages.append(f"Restored container '{container.name}' from buffer to [{row + 1}, {col + 1}].")
 
     messages.append(f"Total unloading cost: {total_cost} seconds.")
-    return messages, total_cost
+    return ship_grid, messages, total_cost
