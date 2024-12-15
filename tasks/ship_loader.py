@@ -445,14 +445,17 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
 #     messages.append(f"Total unloading cost: {total_cost} seconds.")
 #     return ship_grid, messages, total_cost
 
-def convert_grid_to_manuscript(ship_grid):
-    """Convert grid to manuscript format."""
-    manuscript_lines = []
-    for row in ship_grid:
-        for slot in row:
-            if slot.hasContainer:
-                manuscript_lines.append(f"{slot.container.name},{slot.container.weight}")
-    return "\n".join(manuscript_lines)
+def convert_grid_to_manifest(ship_grid):
+    """Convert grid to manifest format."""
+    manifest_lines = []
+    for row_idx, row in enumerate(ship_grid):
+        for col_idx, slot in enumerate(row):
+            coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
+            weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
+            status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
+            line = f"{coordinates}, {weight}, {status_or_name}"
+            manifest_lines.append(line)
+    return "\n".join(manifest_lines)
 
 def append_outbound_to_filename(filename):
     """Append OUTBOUND to filename."""

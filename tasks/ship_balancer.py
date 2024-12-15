@@ -49,11 +49,11 @@ def create_ship_grid(rows, columns):
     return [[Slot(None, False, False) for _ in range(columns)] for _ in range(rows)]
 
 
-# Function to parse the manuscript
+# Function to parse the manifest
 def parse_manifest(file_lines):
     """
-    Parses the manuscript file to create a structured grid.
-    Each entry in the manuscript is assumed to be in the format: [row,col], {weight}, name.
+    Parses the manifest file to create a structured grid.
+    Each entry in the manifest is assumed to be in the format: [row,col], {weight}, name.
     """
     grid = []
     max_row, max_col = 0, 0

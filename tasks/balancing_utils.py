@@ -153,23 +153,23 @@ def plotly_visualize_grid(grid, title="Ship Grid"):
         plot_bgcolor="black",  # Ensure the background is white for contrast
     )
     return fig
-def convert_grid_to_manuscript(ship_grid):
+def convert_grid_to_manifest(ship_grid):
     """
-    Converts the updated grid back to manuscript format.
+    Converts the updated grid back to manifest format.
     Args:
         ship_grid (list): The ship grid with Slot objects.
     Returns:
-        str: Manuscript string representing the updated grid.
+        str: manifest string representing the updated grid.
     """
-    manuscript_lines = []
+    manifest_lines = []
     for row_idx, row in enumerate(ship_grid):
         for col_idx, slot in enumerate(row):
             coordinates = f"[{row_idx + 1:02},{col_idx + 1:02}]"  # Row, Column coordinates
             weight = f"{{{slot.container.weight:05}}}" if slot.container else "{00000}"  # Weight with 5 digits
             status_or_name = slot.container.name if slot.container else ("NAN" if not slot.available else "UNUSED")  # Name, NAN, or UNUSED
             line = f"{coordinates}, {weight}, {status_or_name}"
-            manuscript_lines.append(line)
-    return "\n".join(manuscript_lines)
+            manifest_lines.append(line)
+    return "\n".join(manifest_lines)
 
 
 def append_outbound_to_filename(filename):

@@ -15,7 +15,7 @@ from tasks.ship_balancer import (
 
 from tasks.balancing_utils import (
     plotly_visualize_grid,
-    convert_grid_to_manuscript,
+    convert_grid_to_manifest,
     append_outbound_to_filename,
     plotly_visualize_grid_with_overlay,
     generate_animation_with_annotations,
@@ -123,7 +123,7 @@ def balancing_page():
     if "ship_grid" not in st.session_state:
         st.session_state.ship_grid = create_ship_grid(rows, columns)
 
-    # Use manuscript from file_handler
+    # Use manifest from file_handler
     elif "ship_grid" in st.session_state:
         try:
             # Use file content from file_handler
@@ -132,12 +132,12 @@ def balancing_page():
             st.session_state.initial_plot = plotly_visualize_grid(
                 st.session_state.ship_grid, title="Initial Ship Grid"
             )
-            st.success("Ship grid updated successfully from manuscript.")
+            st.success("Ship grid updated successfully from manifest.")
         except Exception as e:
-            st.error(f"Error processing the manuscript: {e}")
+            st.error(f"Error processing the manifest: {e}")
     else:
         st.error(
-            "No manuscript available. Please upload a file in the File Handler page.")
+            "No manifest available. Please upload a file in the File Handler page.")
     # Display initial grid
     if st.session_state.initial_plot:
         st.subheader("Initial Ship Grid")
@@ -410,24 +410,24 @@ def balancing_page():
         with col3:
             st.metric(label="➡️ Right Balance", value=f"{right_balance_final}")
 
-        # Check if updated manuscript is already stored in session state
-        if "updated_manuscript" not in st.session_state:
-            # Generate and save the updated manuscript
-            updated_manuscript = convert_grid_to_manuscript(
+        # Check if updated manifest is already stored in session state
+        if "updated_manifest" not in st.session_state:
+            # Generate and save the updated manifest
+            updated_manifest = convert_grid_to_manifest(
                 st.session_state.ship_grid)
             outbound_filename = append_outbound_to_filename(
-                st.session_state.get("file_name", "manuscript.txt"))
-            st.session_state.updated_manuscript = updated_manuscript
+                st.session_state.get("file_name", "manifest.txt"))
+            st.session_state.updated_manifest = updated_manifest
             st.session_state.outbound_filename = outbound_filename
         else:
-            # Retrieve the saved updated manuscript and filename
-            updated_manuscript = st.session_state.updated_manuscript
+            # Retrieve the saved updated manifest and filename
+            updated_manifest = st.session_state.updated_manifest
             outbound_filename = st.session_state.outbound_filename
 
         # Provide download button
         st.download_button(
-            label="Download Updated Manuscript",
-            data=updated_manuscript,
+            label="Download Updated Manifest",
+            data=updated_manifest,
             file_name=outbound_filename,
             mime="text/plain",
         )
