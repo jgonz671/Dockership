@@ -1,37 +1,61 @@
-# import os
-# from datetime import datetime
-# from pymongo import MongoClient
+import os
+from datetime import datetime
+from pymongo.collection import Collection
+from pymongo import MongoClient
 
-# class LogFileManager:
-#     def __init__(self, db, base_dir="logs"):
-#         self.log_collection = db["logs"]
-#         self.base_dir = base_dir
-#         os.makedirs(self.base_dir, exist_ok=True)
-#         self.log_file_name = f"KeoghsPort{datetime.now().year}.txt"
-#         self.log_file_path = os.path.join(self.base_dir, self.log_file_name)
+class LogFileManager:
+    """
+    Manages logging to MongoDB and a plain text file.
+    """
+    def __init__(self, db: Collection, log_dir="logs"):
+        """
+        Initializes the LogFileManager.
 
-#     def write_log(self, message):
-#         timestamp = datetime.now()
-#         timestamp_str = timestamp.strftime("%B %d %Y, %H:%M:%S")
-        
-#         # Write to the log file
-#         log_message = f"{timestamp_str} - {message}\n"
-#         with open(self.log_file_path, "a", encoding="utf-8") as log_file:
-#             log_file.write(log_message)
-        
-#         # Insert into the database
-#         log_entry = {
-#             "timestamp": timestamp,
-#             "message": message,
-#         }
-#         self.log_collection.insert_one(log_entry)
+        Args:
+            db (Collection): MongoDB collection for storing logs.
+            log_dir (str): Directory where log files will be stored.
+        """
+        self.db = db
+        self.log_dir = log_dir
+        self.log_file_path = self._get_log_file_path()
 
+        # Ensure log directory exists
+        os.makedirs(self.log_dir, exist_ok=True)
 
-#     def read_logs(self):
-#         if os.path.exists(self.log_file_path):
-#             with open(self.log_file_path, "r", encoding="utf-8") as log_file:
-#                 return log_file.read()
-#         return "No logs available yet."
+    def _get_log_file_path(self):
+        """
+        Generates a log file path dynamically based on the current year.
+        """
+        year = datetime.now().year
+        filename = f"KeoghsPort{year}.txt"
+        return os.path.join(self.log_dir, filename)
 
-#     def get_logs_from_db(self, limit=50):
-#         return list(self.log_collection.find().sort("timestamp", -1).limit(limit))
+    def log(self, message: str, log_type: str = "info"):
+        """
+        Logs a message to MongoDB and a text file.
+
+        Args:
+            message (str): The message to log.
+            log_type (str): The type of log (e.g., 'info', 'error', 'warning').
+        """
+        timestamp = datetime.utcnow()
+
+        # MongoDB log entry
+        log_entry = {
+            "timestamp": timestamp,
+            "message": message,
+            "type": log_type
+        }
+        self.db.insert_one(log_entry)
+
+        # File log entry
+        log_line = f"{timestamp.strftime('%Y-%m-%d %H:%M:%S')} - [{log_type.upper()}] {message}\n"
+        with open(self.log_file_path, "a", encoding="utf-8") as file:
+            file.write(log_line)
+
+        # Optional: Print to console for debugging
+        print(log_line.strip())
+
+    def get_log_file_path(self):
+        """Returns the current log file path."""
+        return self.log_file_path
