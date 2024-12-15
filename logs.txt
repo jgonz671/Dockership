@@ -1,0 +1,50 @@
+December 15th 2024: 22:19 : agamb031 : LOGIN : agamb031 logged in successfully.
+December 15th 2024: 22:19 : agamb031 : UPLOAD_FILE : agamb031 uploaded file: ShipCase3.txt
+December 15th 2024: 22:19 : agamb031 : COUNT_CONTAINERS : Manifest ShipCase3.txt processed. Total containers: 6
+December 15th 2024: 22:19 : agamb031 : UPLOAD_FILE : agamb031 uploaded file: ShipCase3.txt
+December 15th 2024: 22:19 : agamb031 : COUNT_CONTAINERS : Manifest ShipCase3.txt processed. Total containers: 6
+December 15th 2024: 22:19 : agamb031 : PROCEED_TO_OPERATIONS : agamb031 proceeded to operations.
+December 15th 2024: 22:20 : agamb031 : OPERATION : User initiated the Loading/Unloading containers operation.
+December 15th 2024: 22:23 : agamb031 : LOGIN : agamb031 logged in successfully.
+December 15th 2024: 22:23 : agamb031 : UPLOAD_FILE : agamb031 uploaded file: ShipCase5.txt
+December 15th 2024: 22:23 : agamb031 : COUNT_CONTAINERS : Manifest ShipCase5.txt processed. Total containers: 5
+December 15th 2024: 22:23 : agamb031 : UPLOAD_FILE : agamb031 uploaded file: ShipCase5.txt
+December 15th 2024: 22:23 : agamb031 : COUNT_CONTAINERS : Manifest ShipCase5.txt processed. Total containers: 5
+December 15th 2024: 22:23 : agamb031 : PROCEED_TO_OPERATIONS : agamb031 proceeded to operations.
+December 15th 2024: 22:24 : agamb031 : OPERATION : User initiated the Loading/Unloading containers operation.
+December 15th 2024: 22:27 : agamb031 : LOGIN : agamb031 logged in successfully.
+December 15th 2024: 22:27 : agamb031 : UPLOAD_FILE : agamb031 uploaded file: ShipCase4.txt
+December 15th 2024: 22:27 : agamb031 : COUNT_CONTAINERS : Manifest ShipCase4.txt processed. Total containers: 7
+December 15th 2024: 22:27 : agamb031 : UPLOAD_FILE : agamb031 uploaded file: ShipCase4.txt
+December 15th 2024: 22:27 : agamb031 : COUNT_CONTAINERS : Manifest ShipCase4.txt processed. Total containers: 7
+December 15th 2024: 22:27 : agamb031 : PROCEED_TO_OPERATIONS : agamb031 proceeded to operations.
+December 15th 2024: 22:27 : agamb031 : OPERATION : User initiated the Loading/Unloading containers operation.
+December 15th 2024: 22:27 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest.txt.
+December 15th 2024: 22:28 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest.txt.
+December 15th 2024: 22:28 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest.txt.
+December 15th 2024: 22:28 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest.txt.
+December 15th 2024: 22:28 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest.txt.
+December 15th 2024: 22:28 : agamb031 : UNLOAD : agamb031 unloaded Cat
+December 15th 2024: 22:28 : agamb031 : UNLOAD : agamb031 unloaded Ewe
+December 15th 2024: 22:28 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest.txt.
+December 15th 2024: 22:28 : agamb031 : UPDATE_MANIFEST : agamb031 updated the manifest manifest_OUTBOUND.txt.
+December 15th 2024: 22:28 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest_OUTBOUND.txt.
+December 15th 2024: 22:29 : agamb031 : DOWNLOAD_MANIFEST : agamb031 downloaded the manifest manifest_OUTBOUND.txt.
+December 15th 2024: 22:29 : agamb031 : OPERATION : User initiated the Balancing the ship's load operation.
+December 15th 2024: 22:29 : agamb031 : LOGOUT : agamb031 logged out.
+December 15th 2024: 22:32 : admin1 : REGISTER : admin1 registered successfully.
+December 15th 2024: 22:32 : admin1 : LOGIN : admin1 logged in successfully.
+December 15th 2024: 22:32 : admin1 : UPLOAD_FILE : admin1 uploaded file: SilverQueen.txt
+December 15th 2024: 22:32 : admin1 : COUNT_CONTAINERS : Manifest SilverQueen.txt processed. Total containers: 4
+December 15th 2024: 22:32 : admin1 : UPLOAD_FILE : admin1 uploaded file: SilverQueen.txt
+December 15th 2024: 22:32 : admin1 : COUNT_CONTAINERS : Manifest SilverQueen.txt processed. Total containers: 4
+December 15th 2024: 22:32 : admin1 : PROCEED_TO_OPERATIONS : admin1 proceeded to operations.
+December 15th 2024: 22:32 : admin1 : OPERATION : User initiated the Loading/Unloading containers operation.
+December 15th 2024: 22:32 : admin1 : DOWNLOAD_MANIFEST : admin1 downloaded the manifest manifest.txt.
+December 15th 2024: 22:33 : admin1 : DOWNLOAD_MANIFEST : admin1 downloaded the manifest manifest.txt.
+December 15th 2024: 22:33 : admin1 : DOWNLOAD_MANIFEST : admin1 downloaded the manifest manifest.txt.
+December 15th 2024: 22:33 : admin1 : DOWNLOAD_MANIFEST : admin1 downloaded the manifest manifest.txt.
+December 15th 2024: 22:33 : admin1 : User Input Log : Testing this feature 
+December 15th 2024: 22:33 : admin1 : DOWNLOAD_MANIFEST : admin1 downloaded the manifest manifest.txt.
+December 15th 2024: 22:34 : admin1 : LOGOUT : admin1 logged out.
+December 15th 2024: 23:36 : agamb031 : LOGIN : agamb031 logged in successfully.

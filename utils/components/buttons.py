@@ -58,11 +58,11 @@ def create_log_file_download_button():
     """
     Creates a button that triggers the log file generation and download process.
     """
-    st.subheader("Download Log File")
+    # st.subheader("Download Log File")
     # st.button("Generate and Download Log File",
     #           on_click=generate_and_download_log_file)
 
-    return create_button("Download Log File", on_click=generate_and_download_log_file)
+    return create_button("Generate Log File", on_click=generate_and_download_log_file)
 
 
 def create_navigation_button(label, page_name, session_state, trigger_redirect=False, **kwargs):

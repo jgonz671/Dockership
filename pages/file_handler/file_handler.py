@@ -6,7 +6,7 @@ from utils.file_handler import (
     count_containers_on_ship,  # Import new function
 )
 from utils.validators import validate_file_content
-from utils.components.buttons import create_button, create_logout_button
+from utils.components.buttons import create_button, create_logout_button, create_log_file_download_button
 from utils.grid_utils import create_ship_grid, validate_ship_grid
 from utils.logging import log_action
 from tasks.ship_balancer import update_ship_grid
@@ -95,5 +95,13 @@ def file_handler():
             st.session_state.page = "operation"
             st.rerun()
 
-    # Logout button
-    create_logout_button(username, st.session_state)
+     # Create two columns for buttons
+    col1, col2 = st.columns([1, 1])  # Equal width for both columns
+
+    # Log File Download Button (left-aligned)
+    with col1:
+        create_log_file_download_button()
+
+    # Logout Button (right-aligned)
+    with col2:
+        create_logout_button(st.session_state.get("username", "User"), st.session_state)
