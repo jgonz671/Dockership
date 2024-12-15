@@ -16,14 +16,16 @@ def find_next_available_position(ship_grid):
     return -1, -1
 
 def find_blocking_containers(ship_grid, target_row, target_col):
-    """Find containers stacked above target."""
+    """Find containers stacked above target in top-to-bottom order."""
     blocking = []
-    for row in range(target_row + 1, len(ship_grid)):
+    max_row = len(ship_grid)
+    
+    # Scan top-down starting from highest possible position
+    for row in range(max_row - 1, target_row, -1):
         if ship_grid[row][target_col].hasContainer:
             blocking.append((row, target_col))
-        else:
-            break
-    return blocking
+            
+    return blocking  # Already in top-to-bottom order
 
 def find_lowest_available_position(ship_grid, col):
     """Find lowest available position in column."""
@@ -319,6 +321,20 @@ def unload_containers(ship_grid, container_names, buffer_capacity=5):
     return ship_grid, messages, total_cost
 
 
+def convert_grid_to_manuscript(ship_grid):
+    """Convert grid to manuscript format."""
+    manuscript_lines = []
+    for row in ship_grid:
+        for slot in row:
+            if slot.hasContainer:
+                manuscript_lines.append(f"{slot.container.name},{slot.container.weight}")
+    return "\n".join(manuscript_lines)
+
+def append_outbound_to_filename(filename):
+    """Append OUTBOUND to filename."""
+    name, ext = os.path.splitext(filename)
+    return f"{name}_OUTBOUND{ext}"
+
 def find_container_positions(ship_grid, container_names):
     """Find all positions of containers, including duplicates."""
     container_positions = {}
@@ -366,17 +382,3 @@ def get_optimal_container_positions(ship_grid, container_positions, origin):
             
     return optimal_positions
 
-
-def convert_grid_to_manuscript(ship_grid):
-    """Convert grid to manuscript format."""
-    manuscript_lines = []
-    for row in ship_grid:
-        for slot in row:
-            if slot.hasContainer:
-                manuscript_lines.append(f"{slot.container.name},{slot.container.weight}")
-    return "\n".join(manuscript_lines)
-
-def append_outbound_to_filename(filename):
-    """Append OUTBOUND to filename."""
-    name, ext = os.path.splitext(filename)
-    return f"{name}_OUTBOUND{ext}"
