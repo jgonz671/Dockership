@@ -12,7 +12,17 @@ def initialize_session_state(rows, cols):
         st.session_state.messages = []
     if "total_cost" not in st.session_state:
         st.session_state.total_cost = 0
+    if "container_weights" not in st.session_state:
+        st.session_state.container_weights = {}
+    if "loading_step" not in st.session_state:
+        st.session_state.loading_step = "input_names"  
+    if "container_names_to_load" not in st.session_state:
+        st.session_state.container_names_to_load = []
 
+def reset_loading_state():
+    st.session_state.loading_step = "input_names"
+    st.session_state.container_names_to_load = []
+    st.session_state.container_weights = {}
 
 def loading_task():
     col1, _ = st.columns([2, 8])  # Center the button
@@ -35,31 +45,50 @@ def loading_task():
 
     if tab == "Load Containers":
         st.subheader("Load Containers")
-        container_names_input = st.text_input(
-            "Container Names (comma-separated)",
-            placeholder="Enter container names (e.g., Alpha,Beta,Gamma)"
-        )
 
-        if st.button("Load Containers"):
-            if container_names_input:
-                container_names = [name.strip()
-                                   for name in container_names_input.split(",")]
-                updated_grid, messages, cost = load_containers(
-                    st.session_state.ship_grid, container_names)
-                st.session_state.ship_grid = updated_grid  # Update session state
+        if st.session_state.loading_step == "input_names":
+            # Step 1: Input Container Names
+            container_names_input = st.text_input(
+                "Container Names (comma-separated)",
+                placeholder="Enter container names (e.g., Alpha,Beta,Gamma)"
+            )
+
+            if st.button("Next"):
+                if container_names_input:
+                    container_names = [name.strip() for name in container_names_input.split(",") if name.strip()]
+                    if not container_names:
+                        st.error("Please provide valid container names.")
+                    else:
+                        st.session_state.container_names_to_load = container_names
+                        st.session_state.loading_step = "input_weights"
+                        st.rerun()
+                else:
+                    st.error("Please provide valid container names.")
+
+        elif st.session_state.loading_step == "input_weights":
+            # Step 2: Input Weights for Each Container
+            st.subheader("Enter Container Weights")
+            container_weights = {}
+            for name in st.session_state.container_names_to_load:
+                if name not in st.session_state.container_weights:
+                    st.session_state.container_weights[name] = 0.0  
+                st.session_state.container_weights[name] = st.number_input(
+                    f"Weight for '{name}' (kg):",
+                    min_value=0.0,
+                    step=0.1,
+                    format="%.1f",
+                    key=f"{name}_weight"
+                )
+
+            if st.button("Confirm Load"):
+                # Proceed to load containers with the provided weights
+                container_names = st.session_state.container_names_to_load
+                container_weights = st.session_state.container_weights
+                messages, cost = load_containers(st.session_state.ship_grid, container_names, container_weights)
                 st.session_state.messages.extend(messages)
                 st.session_state.total_cost += cost
-
-                for message in messages:
-                    if "Error" in message:
-                        st.error(message)
-                    else:
-                        st.success(message)
-
-                plotly_visualize_grid(
-                    st.session_state.ship_grid, title="Updated Ship Grid")
-            else:
-                st.error("Please provide valid container names.")
+                reset_loading_state()
+                st.rerun()
 
     elif tab == "Unload Containers":
         st.subheader("Unload Containers")

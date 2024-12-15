@@ -133,9 +133,23 @@ def append_outbound_to_filename(filename):
     return f"{name}_OUTBOUND{ext}"
 
 
+# def update_container_weight(container_name):
+#     """
+#     Prompts the user to input the weight for a container and returns the weight.
+#     """
+#     if f"{container_name}_weight" not in st.session_state:
+#         st.session_state[f"{container_name}_weight"] = 0.0
 
+#     weight = st.number_input(
+#         f"Enter the weight (in kg) for container '{container_name}':",
+#         min_value=0.0,
+#         step=0.1,
+#         format="%.1f",
+#         key=f"{container_name}_weight"
+#     )
+#     return st.session_state[f"{container_name}_weight"]
 
-def load_containers(ship_grid, container_names):
+def load_containers(ship_grid, container_names, container_weights):
     """Load containers efficiently, starting from leftmost columns."""
     messages = []
     total_cost = 0
@@ -147,8 +161,7 @@ def load_containers(ship_grid, container_names):
         target_pos = find_next_available_position(ship_grid)
 
         if target_pos == (-1, -1):
-            messages.append(
-                f"Error: No available slots for container '{container_name}'.")
+            messages.append(f"Error: No available slots for container '{container_name}'.")
             continue
 
         # Calculate and add move cost
@@ -156,11 +169,10 @@ def load_containers(ship_grid, container_names):
         total_cost += move_cost
         first_move = False
 
-        # Create container with random weight between 10000-100000
-        import random
-        weight = random.randint(10000, 100000)
+        # Get the weight from the provided weights
+        weight = container_weights.get(container_name, 0.0)
 
-        # Place container
+        # Place the container with the specified weight
         row, col = target_pos
         ship_grid[row][col] = Slot(
             container=Container(name=container_name, weight=weight),
@@ -170,11 +182,12 @@ def load_containers(ship_grid, container_names):
 
         messages.append(
             f"Container '{container_name}' loaded at [{row + 1}, {col + 1}] "
-            f"with weight {weight}. Move cost: {move_cost} seconds"
+            f"with weight {weight} kg. Move cost: {move_cost} seconds"
         )
 
+    # Calculate total operation cost
     messages.append(f"Total loading cost: {total_cost} seconds")
-    return ship_grid, messages, total_cost
+    return messages, total_cost
 
 
 
