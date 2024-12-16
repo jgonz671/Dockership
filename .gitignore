@@ -39,6 +39,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 temp.txt
 random.pdf
+logs.txt
 
 # Unit test / coverage reports
 htmlcov/

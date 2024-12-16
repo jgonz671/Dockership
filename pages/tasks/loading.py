@@ -1,8 +1,12 @@
 import streamlit as st
 from tasks.ship_loader import load_containers, unload_containers
 from utils.grid_utils import create_ship_grid, plotly_visualize_grid
-from utils.components.buttons import create_navigation_button
+from utils.components.buttons import (
+    create_navigation_button,
+    create_text_input_with_logging,  # Imported for logging custom notes
+)
 from tasks.balancing_utils import convert_grid_to_manifest, append_outbound_to_filename
+from utils.logging import log_action  # Import logging function
 import os
 
 
@@ -16,7 +20,7 @@ def initialize_session_state(rows, cols):
     if "container_weights" not in st.session_state:
         st.session_state.container_weights = {}
     if "loading_step" not in st.session_state:
-        st.session_state.loading_step = "input_names"  
+        st.session_state.loading_step = "input_names"
     if "container_names_to_load" not in st.session_state:
         st.session_state.container_names_to_load = []
     if "updated_manifest" not in st.session_state:
@@ -28,10 +32,12 @@ def initialize_session_state(rows, cols):
     if "unload_steps" not in st.session_state:
         st.session_state.unload_steps = []
 
+
 def reset_loading_state():
     st.session_state.loading_step = "input_names"
     st.session_state.container_names_to_load = []
     st.session_state.container_weights = {}
+
 
 def loading_task():
     col1, _ = st.columns([2, 8])
@@ -40,13 +46,15 @@ def loading_task():
             st.rerun()
 
     st.title("Ship Loading and Unloading System")
+    username = st.session_state.get("username", "User")
 
     # Initialize session state
     rows, cols = 8, 12
     initialize_session_state(rows, cols)
 
     # Action selection
-    tab = st.radio("Choose Action", ["Load Containers", "Unload Containers"], horizontal=True)
+    tab = st.radio("Choose Action", [
+                   "Load Containers", "Unload Containers"], horizontal=True)
 
     # Step visualization based on selected tab
     if tab == "Load Containers" and st.session_state.load_steps:
@@ -54,24 +62,27 @@ def loading_task():
             "View loading steps:",
             options=[step['name'] for step in st.session_state.load_steps]
         )
-        step_data = next(s for s in st.session_state.load_steps if s['name'] == step)
+        step_data = next(
+            s for s in st.session_state.load_steps if s['name'] == step)
         plotly_visualize_grid(step_data['grid'], title=f"Ship Grid - {step}")
         st.info(f"Step Cost: {step_data['cost']} seconds")
         for msg in step_data['messages']:
             st.write(msg)
+
     elif tab == "Unload Containers" and st.session_state.unload_steps:
         step = st.selectbox(
             "View unloading steps:",
             options=[step['name'] for step in st.session_state.unload_steps]
         )
-        step_data = next(s for s in st.session_state.unload_steps if s['name'] == step)
+        step_data = next(
+            s for s in st.session_state.unload_steps if s['name'] == step)
         plotly_visualize_grid(step_data['grid'], title=f"Ship Grid - {step}")
         st.info(f"Step Cost: {step_data['cost']} seconds")
         for msg in step_data['messages']:
             st.write(msg)
     else:
-        # Display current grid if no steps available
-        plotly_visualize_grid(st.session_state.ship_grid, title="Current Ship Grid")
+        plotly_visualize_grid(st.session_state.ship_grid,
+                              title="Current Ship Grid")
 
     if tab == "Load Containers":
         st.subheader("Load Containers")
@@ -83,7 +94,8 @@ def loading_task():
             )
             if st.button("Next"):
                 if container_names_input:
-                    container_names = [name.strip() for name in container_names_input.split(",") if name.strip()]
+                    container_names = [
+                        name.strip() for name in container_names_input.split(",") if name.strip()]
                     if container_names:
                         st.session_state.container_names_to_load = container_names
                         st.session_state.loading_step = "input_weights"
@@ -96,8 +108,6 @@ def loading_task():
         elif st.session_state.loading_step == "input_weights":
             st.subheader("Enter Container Weights")
             for name in st.session_state.container_names_to_load:
-                if name not in st.session_state.container_weights:
-                    st.session_state.container_weights[name] = 0.0
                 st.session_state.container_weights[name] = st.number_input(
                     f"Weight for '{name}' (kg):",
                     min_value=0,
@@ -117,6 +127,11 @@ def loading_task():
                 st.session_state.total_cost += cost
                 st.session_state.load_steps = steps
                 reset_loading_state()
+
+                # Log user action
+                for name in st.session_state.container_names_to_load:
+                    log_action(username=username, action="LOAD",
+                               notes=f"{username} loaded {name}")
                 st.rerun()
 
     elif tab == "Unload Containers":
@@ -128,7 +143,8 @@ def loading_task():
 
         if st.button("Unload Containers"):
             if container_names_input:
-                container_names = [name.strip() for name in container_names_input.split(",")]
+                container_names = [name.strip()
+                                   for name in container_names_input.split(",")]
                 updated_grid, messages, cost, steps = unload_containers(
                     st.session_state.ship_grid, container_names
                 )
@@ -136,6 +152,11 @@ def loading_task():
                 st.session_state.messages.extend(messages)
                 st.session_state.total_cost += cost
                 st.session_state.unload_steps = steps
+
+                # Log user action
+                for name in container_names:
+                    log_action(username=username, action="UNLOAD",
+                               notes=f"{username} unloaded {name}")
                 st.rerun()
             else:
                 st.error("Please provide valid container names.")
@@ -146,21 +167,33 @@ def loading_task():
 
     # Manifest handling
     st.subheader("Update/Download Manifest")
-    if st.button("Update Manifest"):
-        updated_manifest = convert_grid_to_manifest(st.session_state.ship_grid)
-        outbound_filename = append_outbound_to_filename(
-            st.session_state.get("file_name", "manifest.txt")
-        )
-        st.session_state.updated_manifest = updated_manifest
-        st.session_state.outbound_filename = outbound_filename
-        st.success("Manifest updated successfully!")
+    col1, col2, col3 = st.columns(3)
 
-    st.download_button(
-        label="Download Updated Manifest",
-        data=st.session_state.updated_manifest,
-        file_name=st.session_state.outbound_filename,
-        mime="text/plain",
-    )
+    with col1:
+        if st.button("Update Manifest"):
+            updated_manifest = convert_grid_to_manifest(
+                st.session_state.ship_grid)
+            outbound_filename = append_outbound_to_filename(
+                st.session_state.get("file_name", "manifest.txt")
+            )
+            st.session_state.updated_manifest = updated_manifest
+            st.session_state.outbound_filename = outbound_filename
+            st.success("Manifest updated successfully!")
+            log_action(username=username, action="UPDATE_MANIFEST",
+                       notes=f"{username} updated the manifest {outbound_filename}.")
+
+    with col2:
+        st.download_button(
+            label="Download Updated Manifest",
+            data=st.session_state.updated_manifest,
+            file_name=st.session_state.outbound_filename,
+            mime="text/plain",
+            on_click=log_action(username=username ,action="DOWNLOAD_MANIFEST", notes=f"{username} downloaded the manifest {st.session_state.outbound_filename}.")
+        )
+
+    with col3:
+        # Button for logging custom notes
+        create_text_input_with_logging(username=username)
 
     # Display action history
     st.subheader("Action History")

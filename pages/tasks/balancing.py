@@ -3,7 +3,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from copy import deepcopy
 from utils.components.buttons import create_navigation_button
-
+from utils.logging import log_action
 from tasks.ship_balancer import (
     create_ship_grid,
     update_ship_grid,
@@ -21,7 +21,7 @@ from tasks.balancing_utils import (
     generate_animation_with_annotations,
     generate_stepwise_animation
 )
-from utils.components.buttons import create_navigation_button
+from utils.components.buttons import create_navigation_button, create_text_input_with_logging
 
 
 def visualize_steps_with_overlay():
@@ -101,6 +101,7 @@ def balancing_page():
             st.rerun()
     # Streamlit App
     st.title("Ship Balancing System")
+    username = st.session_state.get("username", "User")
     rows = 8  # Fixed to match the manifest
     columns = 12  # Fixed to match the manifest
 
@@ -115,6 +116,12 @@ def balancing_page():
 
     if "steps" not in st.session_state:
         st.session_state.steps = []
+
+    if "updated_manifest" not in st.session_state:
+        st.session_state.updated_manifest = ""
+
+    if "outbound_filename" not in st.session_state:
+        st.session_state.outbound_filename = "manifest.txt"
 
     if "ship_grids" not in st.session_state:
         st.session_state.ship_grids = []
@@ -151,6 +158,8 @@ def balancing_page():
         # Display metrics for current balance
         st.markdown("### 🚢 **Balance Metrics Before Balancing**")
         total_weight = left_balance + right_balance
+        log_action(username=username, action="CALCULATE_INITIAL_BALANCE", 
+                   notes=f"Initial balance metrics: Total Weight: {total_weight}, Left Balance: {left_balance}, Right Balance: {right_balance}.")
         col1, col2, col3 = st.columns(3)  # Create columns for alignment
         with col1:
             st.metric(label="⚖️ Total Weight", value=f"{total_weight}")
@@ -169,30 +178,57 @@ def balancing_page():
         else:
             st.error(
                 "The ship is significantly unbalanced. Balancing is highly recommended.")
-    # Perform balancing
+   # Perform balancing
     if st.button("Balance Ship"):
         # Save the initial grid only once to preserve its state
         if "initial_grid" not in st.session_state:
             st.session_state.initial_grid = [
                 row.copy() for row in st.session_state.ship_grid]
+        
         # Calculate balance and perform balancing
         left_balance, right_balance, balanced = calculate_balance(
             st.session_state.ship_grid)
         if balanced:
             st.success("The ship is already balanced!")
         else:
+            # Log the start of balancing
+            username = st.session_state.get("username", "User")
+            log_action(username=username, action="BALANCE_START", 
+                    notes=f"{username} started ship balancing.")
+
+            # Perform balancing and get steps
             steps, ship_grids, status = balance(
                 st.session_state.ship_grid, st.session_state.containers)
+            
+            # Store intermediate grids and steps
             st.session_state.steps = steps
-            st.session_state.ship_grids = ship_grids  # Store intermediate grids
+            st.session_state.ship_grids = ship_grids  
             st.session_state.ship_grid = ship_grids[-1]
+            
+            # Visualize final grid
             st.session_state.final_plot = plotly_visualize_grid(
                 st.session_state.ship_grid, title="Final Ship Grid After Balancing"
             )
+
+            # Log each substep
+            for step_number, step_list in enumerate(steps):
+                for sub_step_number, sub_step in enumerate(step_list):
+                    log_action(
+                        username=username,
+                        action="BALANCE_STEP",
+                        notes=f"{username} performed Step {step_number + 1}, Sub-Step {sub_step_number + 1}: {sub_step}"
+                    )
+
+            # Display success or warning message
             if status:
                 st.success("Ship balanced successfully!")
+                log_action(username=username, action="BALANCE_COMPLETE", 
+                        notes=f"{username} successfully balanced the ship.")
             else:
                 st.warning("Ship could not be perfectly balanced. Using SIFT.")
+                log_action(username=username, action="BALANCE_PARTIAL", 
+                        notes=f"{username} could not perfectly balance the ship.")
+
 
     # Tabs for navigation
     selected_tab = st.radio(
@@ -410,24 +446,32 @@ def balancing_page():
         with col3:
             st.metric(label="➡️ Right Balance", value=f"{right_balance_final}")
 
-        # Check if updated manifest is already stored in session state
-        if "updated_manifest" not in st.session_state:
-            # Generate and save the updated manifest
+    # Manifest handling
+    # st.subheader("Update/Download Manifest")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        if st.button("Update Manifest"):
             updated_manifest = convert_grid_to_manifest(
                 st.session_state.ship_grid)
             outbound_filename = append_outbound_to_filename(
-                st.session_state.get("file_name", "manifest.txt"))
+                st.session_state.get("file_name", "manifest.txt")
+            )
             st.session_state.updated_manifest = updated_manifest
             st.session_state.outbound_filename = outbound_filename
-        else:
-            # Retrieve the saved updated manifest and filename
-            updated_manifest = st.session_state.updated_manifest
-            outbound_filename = st.session_state.outbound_filename
+            st.success("Manifest updated successfully!")
+            log_action(username=username, action="UPDATE_MANIFEST",
+                       notes=f"{username} updated the manifest {outbound_filename}.")
 
-        # Provide download button
+    with col2:
         st.download_button(
             label="Download Updated Manifest",
-            data=updated_manifest,
-            file_name=outbound_filename,
+            data=st.session_state.updated_manifest,
+            file_name=st.session_state.outbound_filename,
             mime="text/plain",
+            on_click=log_action(username=username ,action="DOWNLOAD_MANIFEST", notes=f"{username} downloaded the manifest {st.session_state.outbound_filename}.")
         )
+
+    with col3:
+        # Button for logging custom notes
+        create_text_input_with_logging(username=username)

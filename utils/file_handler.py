@@ -1,4 +1,4 @@
-from utils.logging import log_user_action
+from utils.logging import log_action
 
 
 def process_file_content(file_content):
@@ -14,34 +14,48 @@ def process_file_content(file_content):
     return file_content.splitlines()
 
 
-def log_file_upload(logs_collection, username, filename):
+def log_file_upload(username, filename):
     """
     Logs the file upload action.
 
     Args:
-        logs_collection: MongoDB collection for logs.
         username: The username of the user uploading the file.
         filename: The name of the uploaded file.
     """
-    log_user_action(
-        logs_collection,
-        username,
-        f"User uploaded file: {filename}",
-        "",
+    log_action(
+        username=username,
+        action="UPLOAD_FILE",
+        notes=f"{username} uploaded file: {filename}",
     )
 
 
-def log_proceed_to_operations(logs_collection, username):
+def log_proceed_to_operations(username):
     """
     Logs the action when the user proceeds to operations.
 
     Args:
-        logs_collection: MongoDB collection for logs.
         username: The username of the user proceeding to operations.
     """
-    log_user_action(
-        logs_collection,
-        username,
-        "User clicked to proceed to operations.",
-        "",
+    log_action(
+        username=username,
+        action="PROCEED_TO_OPERATIONS",
+        notes=f"{username} proceeded to operations.",
     )
+
+
+def count_containers_on_ship(ship_grid):
+    """
+    Counts the total number of containers on the ship grid.
+
+    Args:
+        ship_grid (list): A 2D grid containing Slot objects.
+
+    Returns:
+        int: The total count of containers on the ship.
+    """
+    container_count = 0
+    for row in ship_grid:
+        for slot in row:
+            if slot.hasContainer:
+                container_count += 1
+    return container_count
