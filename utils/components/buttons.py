@@ -144,7 +144,7 @@ def log_text_input_action(username: str, text: str):
         text (str): The text entered by the user.
     """
     if text.strip():  # Ensure text is not empty
-        log_action(username, "User Input Log", text)
+        log_action(username, "USER INPUT LOG", text)
         try:
             st.toast("✅ Note successfully logged!", icon="📝")
         except AttributeError:
@@ -179,5 +179,6 @@ def create_text_input_with_logging(username: str):
         # Use the existing create_button for logging the note
         def log_note_action():
             log_text_input_action(username, user_input)
+            st.session_state.show_text_input = False
 
         create_button("Log Note", on_click=log_note_action)
