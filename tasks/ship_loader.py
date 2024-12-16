@@ -143,7 +143,7 @@ def move_blocking_container_low_capacity(ship_grid, block_row, block_col, contai
     cost = move_container(ship_grid, (block_row, block_col), (target_row, target_col), messages, first_move)
     return cost, (target_row, target_col)
 
-def load_containers(ship_grid, container_names):
+def load_containers(ship_grid, container_names, container_weights):
     """Load containers with step-by-step tracking."""
     messages = []
     total_cost = 0
@@ -173,8 +173,7 @@ def load_containers(ship_grid, container_names):
         # Calculate move cost and load container
         row, col = target_pos
         move_cost = calculate_move_cost(origin, target_pos, first_move)
-        weight = random.randint(10000, 100000)  # Random weight between 10-100 tons
-        
+        weight = container_weights.get(container_name, 0.0)
         current_grid[row][col] = Slot(
             container=Container(name=container_name, weight=weight),
             hasContainer=True,

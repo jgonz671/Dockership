@@ -120,7 +120,8 @@ def loading_task():
             if st.button("Confirm Load"):
                 updated_grid, messages, cost, steps = load_containers(
                     st.session_state.ship_grid,
-                    st.session_state.container_names_to_load
+                    st.session_state.container_names_to_load,
+                    st.session_state.container_weights
                 )
                 st.session_state.ship_grid = updated_grid
                 st.session_state.messages.extend(messages)
